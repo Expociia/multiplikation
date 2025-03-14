@@ -660,6 +660,7 @@ function updateStats() {
     // Find hardest and best tables
     const tableStats = Object.entries(stats.tableStats);
     const hardestTables = tableStats
+        .filter(([_, stat]) => stat.total > 0) // Filtrera bort tabeller utan aktivitet
         .sort((a, b) => {
             const ratioA = a[1].correct / a[1].total;
             const ratioB = b[1].correct / b[1].total;
@@ -671,6 +672,7 @@ function updateStats() {
         .slice(0, 3);
     
     const bestTables = tableStats
+        .filter(([_, stat]) => stat.total > 0) // Filtrera bort tabeller utan aktivitet
         .sort((a, b) => {
             const ratioA = a[1].correct / a[1].total;
             const ratioB = b[1].correct / b[1].total;
@@ -683,13 +685,13 @@ function updateStats() {
 
     // Find fastest tables
     const fastestTables = tableStats
-        .filter(([_, stat]) => stat.total >= 5) // At least 5 problems to be counted
+        .filter(([_, stat]) => stat.total >= 5 && stat.averageTime > 0) // Minst 5 uppgifter och har en registrerad tid
         .sort((a, b) => a[1].averageTime - b[1].averageTime)
         .slice(0, 3);
 
     // Find slowest tables
     const slowestTables = tableStats
-        .filter(([_, stat]) => stat.total >= 5) // At least 5 problems to be counted
+        .filter(([_, stat]) => stat.total >= 5 && stat.averageTime > 0) // Minst 5 uppgifter och har en registrerad tid
         .sort((a, b) => b[1].averageTime - a[1].averageTime)
         .slice(0, 3);
 
@@ -1303,13 +1305,16 @@ async function updateLeaderboard(type) {
         
         usersSnapshot.forEach(doc => {
             const userData = doc.data();
-            users.push({
-                username: doc.id, // Använd dokumentets ID som användarnamn
-                totalSolved: userData.totalExercises || 0,
-                correctAnswers: userData.correct || 0,
-                averageTime: userData.fastestTime || 0,
-                bestStreak: userData.bestStreak || 0
-            });
+            // Lägg bara till användare som har aktivitet
+            if (userData.totalExercises > 0) {
+                users.push({
+                    username: doc.id,
+                    totalSolved: userData.totalExercises || 0,
+                    correctAnswers: userData.correct || 0,
+                    averageTime: userData.fastestTime || 0,
+                    bestStreak: userData.bestStreak || 0
+                });
+            }
         });
         
         // Sortera användare baserat på vald typ
@@ -1320,7 +1325,11 @@ async function updateLeaderboard(type) {
                 case 'correct':
                     return b.correctAnswers - a.correctAnswers;
                 case 'speed':
-                    return a.averageTime - b.averageTime;
+                    // Filtrera bort användare utan tid för speed-tabellen
+                    if (type === 'speed') {
+                        return a.averageTime - b.averageTime;
+                    }
+                    return 0;
                 case 'streak':
                     return b.bestStreak - a.bestStreak;
                 default:
