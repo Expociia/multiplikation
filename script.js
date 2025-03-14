@@ -84,7 +84,9 @@ async function updatePreviousUsersList() {
         const querySnapshot = await getDocs(collection(db, "users"));
         let userListHTML = '';
         
-        querySnapshot.forEach((document) => {
+        // Använd Array.from istället för forEach
+        const documents = Array.from(querySnapshot.docs);
+        for (const document of documents) {
             const user = document.id;
             const stats = document.data();
             const level = Math.floor(stats.totalExercises / 100) + 1;
@@ -99,7 +101,7 @@ async function updatePreviousUsersList() {
                     </div>
                 </li>
             `;
-        });
+        }
         
         userList.innerHTML = userListHTML;
     } catch (error) {
