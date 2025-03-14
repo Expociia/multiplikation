@@ -794,6 +794,22 @@ function findHardestTables(count) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Vänta på att Firebase är redo
+    if (window.firebaseReady) {
+        initializeApp();
+    } else {
+        // Om Firebase inte är redo, vänta på det
+        const checkFirebase = setInterval(() => {
+            if (window.firebaseReady) {
+                clearInterval(checkFirebase);
+                initializeApp();
+            }
+        }, 100);
+    }
+});
+
+// Initialisera applikationen
+function initializeApp() {
     loadUserData();
     if (!currentUser) {
         showUserModal();
@@ -889,4 +905,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     generateProblem();
-}); 
+} 
