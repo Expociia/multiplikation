@@ -13,21 +13,33 @@ async function loadUserData() {
         updatePreviousUsersList();
         
         // Om vi har en sparad användare, ladda deras data
-        if (currentUser && userStats[currentUser]) {
-            const stats = userStats[currentUser];
-            const level = Math.floor(stats.totalExercises / 100) + 1;
-            const currentTitle = titles.find(t => t.level <= level) || titles[0];
+        if (currentUser) {
+            // Kontrollera om användaren fortfarande finns i databasen
+            const userRef = doc(db, "users", currentUser);
+            const userDoc = await getDoc(userRef);
             
-            document.getElementById('currentUser').innerHTML = `
-                <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
-                <div class="current-user-info">
-                    <span class="current-user-name">${currentUser}</span>
-                    <span class="current-user-title">${currentTitle.title}</span>
-                </div>
-            `;
-            document.getElementById('statsUserName').textContent = currentUser;
-            updateStats();
-            updateUserProfile();
+            if (userDoc.exists()) {
+                userStats[currentUser] = userDoc.data();
+                const stats = userStats[currentUser];
+                const level = Math.floor(stats.totalExercises / 100) + 1;
+                const currentTitle = titles.find(t => t.level <= level) || titles[0];
+                
+                document.getElementById('currentUser').innerHTML = `
+                    <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
+                    <div class="current-user-info">
+                        <span class="current-user-name">${currentUser}</span>
+                        <span class="current-user-title">${currentTitle.title}</span>
+                    </div>
+                `;
+                document.getElementById('statsUserName').textContent = currentUser;
+                updateStats();
+                updateUserProfile();
+            } else {
+                // Om användaren inte finns i databasen, rensa localStorage
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                showUserModal();
+            }
         }
     } catch (error) {
         console.error("Error loading user data:", error);
