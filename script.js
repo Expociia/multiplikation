@@ -1,8 +1,8 @@
-// Användarhantering
+// User management
 let currentUser = localStorage.getItem('currentUser');
 let userStats = {};
 
-// Hämta sparad data från Firebase
+// Load saved data from Firebase
 async function loadUserData() {
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
@@ -11,9 +11,9 @@ async function loadUserData() {
             userStats[doc.id] = doc.data();
         });
         
-        // Om vi har en sparad användare, ladda deras data
+        // If we have a saved user, load their data
         if (currentUser) {
-            // Kontrollera om användaren fortfarande finns i databasen
+            // Check if the user still exists in the database
             const userRef = doc(db, "users", currentUser);
             const userDoc = await getDoc(userRef);
             
@@ -33,9 +33,9 @@ async function loadUserData() {
                 document.getElementById('statsUserName').textContent = currentUser;
                 updateStats();
                 updateUserProfile();
-                generateProblem(); // Starta spelet direkt om vi har en användare
+                generateProblem(); // Start the game directly if we have a user
             } else {
-                // Om användaren inte finns i databasen, rensa localStorage
+                // If the user doesn't exist in the database, clear localStorage
                 localStorage.removeItem('currentUser');
                 currentUser = null;
                 showUserModal();
@@ -44,7 +44,7 @@ async function loadUserData() {
             showUserModal();
         }
         
-        // Uppdatera listan med användare
+        // Update the list of users
         updatePreviousUsersList();
     } catch (error) {
         console.error("Error loading user data:", error);
@@ -52,7 +52,7 @@ async function loadUserData() {
     }
 }
 
-// Spara data till Firebase
+// Save data to Firebase
 async function saveUserData() {
     if (!currentUser) return;
     
@@ -64,10 +64,10 @@ async function saveUserData() {
     }
 }
 
-// Användarhantering
+// User interface management
 function showUserModal() {
     document.getElementById('userModal').style.display = 'block';
-    loadUserData(); // Uppdatera listan varje gång modalen öppnas
+    loadUserData(); // Update the list every time the modal is opened
 }
 
 function hideUserModal() {
@@ -84,7 +84,7 @@ async function updatePreviousUsersList() {
         const querySnapshot = await getDocs(collection(db, "users"));
         let userListHTML = '';
         
-        // Använd Array.from istället för forEach
+        // Use Array.from instead of forEach
         const documents = Array.from(querySnapshot.docs);
         for (const document of documents) {
             const user = document.id;
@@ -160,20 +160,20 @@ async function selectUser(userName) {
 // Gör selectUser tillgänglig globalt
 window.selectUser = selectUser;
 
-// Spelvariabler
+// Game variables
 let score = 0;
 let correct = 0;
 let incorrect = 0;
 let currentTable = 0;
 let selectedTables = Array.from({length: 10}, (_, i) => i + 1);
 let trainingMode = 'free';
-let startTime = null; // För tidsmätning
-let gameMode = null; // 'practice' eller 'challenge'
-let remainingProblems = 0; // För utmaningsläge
-let timeLimit = null; // För tidsgräns
-let gameTimer = null; // För tidsgräns
+let startTime = null; // For time measurement
+let gameMode = null; // 'practice' or 'challenge'
+let remainingProblems = 0; // For challenge mode
+let timeLimit = null; // For time limit
+let gameTimer = null; // For time limit
 
-// Speltyper
+// Game types
 const gameTypes = [
     {
         name: "Alla tabeller",
@@ -212,7 +212,7 @@ const gameTypes = [
     }
 ];
 
-// DOM-element
+// DOM elements
 const number1Element = document.getElementById('number1');
 const number2Element = document.getElementById('number2');
 const answerInput = document.getElementById('answer');
@@ -223,43 +223,43 @@ const correctElement = document.getElementById('correct');
 const incorrectElement = document.getElementById('incorrect');
 const hintButton = document.getElementById('hint');
 
-// Ledtrådssystem
+// Hint system
 const hints = {
     5: [
-        "Tänk på att 5 är hälften av 10!",
-        "Om du multiplicerar med 10 och sedan delar med 2 får du samma svar",
-        "För 5 × 6: tänk 10 × 6 = 60, sedan 60 ÷ 2 = 30"
+        "Think of 5 as half of 10!",
+        "If you multiply by 10 and then divide by 2, you get the same answer",
+        "For 5 × 6: think 10 × 6 = 60, then 60 ÷ 2 = 30"
     ],
     9: [
-        "För 9:ans tabell kan du använda dina fingrar!",
-        "För 9 × 6: håll upp 6 fingrar, lägg ner det 6:e fingret. Du ser 5 fingrar till vänster och 4 till höger = 54",
-        "Ett annat sätt: multiplicera först med 10 och ta bort talet självt. För 9 × 6: 10 × 6 = 60, sedan 60 - 6 = 54"
+        "For the 9 times table, you can use your fingers!",
+        "For 9 × 6: hold up 6 fingers, put down the 6th finger. You see 5 fingers on the left and 4 on the right = 54",
+        "Another way: multiply by 10 and subtract the number itself. For 9 × 6: 10 × 6 = 60, then 60 - 6 = 54"
     ],
     4: [
-        "För 4:ans tabell, dubblera två gånger!",
-        "För 4 × 6: först 6 + 6 = 12, sedan 12 + 12 = 24",
-        "Ett annat sätt: tänk att du har 4 grupper med samma antal"
+        "For the 4 times table, double twice!",
+        "For 4 × 6: first 6 + 6 = 12, then 12 + 12 = 24",
+        "Another way: think of having 4 groups with the same amount"
     ],
     6: [
-        "För 6:ans tabell, tänk 5 gånger talet plus talet självt",
-        "För 6 × 6: först 5 × 6 = 30, sedan 30 + 6 = 36",
-        "Ett annat sätt: tänk att du har 6 grupper med samma antal"
+        "For the 6 times table, think 5 times the number plus the number itself",
+        "For 6 × 6: first 5 × 6 = 30, then 30 + 6 = 36",
+        "Another way: think of having 6 groups with the same amount"
     ],
     7: [
-        "För 7:ans tabell, tänk 5 gånger talet plus 2 gånger talet",
-        "För 7 × 6: först 5 × 6 = 30, sedan 2 × 6 = 12, och 30 + 12 = 42",
-        "Ett annat sätt: tänk att du har 7 grupper med samma antal"
+        "For the 7 times table, think 5 times the number plus 2 times the number",
+        "For 7 × 6: first 5 × 6 = 30, then 2 × 6 = 12, and 30 + 12 = 42",
+        "Another way: think of having 7 groups with the same amount"
     ],
     8: [
-        "För 8:ans tabell, dubblera tre gånger!",
-        "För 8 × 6: först 6 + 6 = 12, sedan 12 + 12 = 24, och 24 + 24 = 48",
-        "Ett annat sätt: tänk att du har 8 grupper med samma antal"
+        "For the 8 times table, double three times!",
+        "For 8 × 6: first 6 + 6 = 12, then 12 + 12 = 24, and 24 + 24 = 48",
+        "Another way: think of having 8 groups with the same amount"
     ]
 };
 
 let currentHintIndex = 0;
 
-// Titlar och nivåer
+// Titles and levels
 const titles = [
     { level: 1, title: "Nykomling" },
     { level: 2, title: "Matematikstudent" },
@@ -309,7 +309,7 @@ const achievements = [
     }
 ];
 
-// Generera ny uppgift
+// Generate new problem
 function generateProblem() {
     if (!currentUser) {
         showUserModal();
@@ -341,10 +341,10 @@ function generateProblem() {
     feedbackElement.textContent = '';
     hintButton.style.display = 'none';
     currentHintIndex = 0;
-    startTime = Date.now(); // Starta tidsmätning
+    startTime = Date.now(); // Start time measurement
 }
 
-// Hitta svåraste tabellen
+// Find the hardest table
 function findHardestTable() {
     let worstTable = 1;
     let worstRatio = 1;
