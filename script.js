@@ -1,82 +1,136 @@
 // Användarhantering
-let currentUser = null;
+let currentUser = localStorage.getItem('currentUser');
 let userStats = {};
 
-// Hämta sparad data från localStorage
-function loadUserData() {
-    const savedUsers = localStorage.getItem('multiplicationUsers');
-    if (savedUsers) {
-        userStats = JSON.parse(savedUsers);
+// Hämta sparad data från Firebase
+async function loadUserData() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        userStats = {};
+        querySnapshot.forEach((doc) => {
+            userStats[doc.id] = doc.data();
+        });
+        updatePreviousUsersList();
+        
+        // Om vi har en sparad användare, ladda deras data
+        if (currentUser && userStats[currentUser]) {
+            const stats = userStats[currentUser];
+            const level = Math.floor(stats.totalExercises / 100) + 1;
+            const currentTitle = titles.find(t => t.level <= level) || titles[0];
+            
+            document.getElementById('currentUser').innerHTML = `
+                <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
+                <div class="current-user-info">
+                    <span class="current-user-name">${currentUser}</span>
+                    <span class="current-user-title">${currentTitle.title}</span>
+                </div>
+            `;
+            document.getElementById('statsUserName').textContent = currentUser;
+            updateStats();
+            updateUserProfile();
+        }
+    } catch (error) {
+        console.error("Error loading user data:", error);
     }
 }
 
-// Spara data till localStorage
-function saveUserData() {
-    localStorage.setItem('multiplicationUsers', JSON.stringify(userStats));
+// Spara data till Firebase
+async function saveUserData() {
+    if (!currentUser) return;
+    
+    try {
+        const userRef = doc(db, "users", currentUser);
+        await setDoc(userRef, userStats[currentUser]);
+    } catch (error) {
+        console.error("Error saving user data:", error);
+    }
 }
 
 // Användarhantering
 function showUserModal() {
     document.getElementById('userModal').style.display = 'block';
-    updatePreviousUsersList();
+    loadUserData(); // Uppdatera listan varje gång modalen öppnas
 }
 
 function hideUserModal() {
     document.getElementById('userModal').style.display = 'none';
 }
 
-function updatePreviousUsersList() {
+async function updatePreviousUsersList() {
     const userList = document.getElementById('previousUsers');
     userList.innerHTML = '';
-    Object.keys(userStats).forEach(user => {
-        const stats = userStats[user];
+    
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        querySnapshot.forEach((document) => {
+            const user = document.id;
+            const stats = document.data();
+            const level = Math.floor(stats.totalExercises / 100) + 1;
+            const currentTitle = titles.find(t => t.level <= level) || titles[0];
+            
+            const li = document.createElement('li');
+            li.className = 'user-list-item';
+            li.innerHTML = `
+                <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="user-list-avatar">
+                <div class="user-list-info">
+                    <span class="user-list-name">${user}</span>
+                    <span class="user-list-title">${currentTitle.title}</span>
+                </div>
+            `;
+            li.onclick = () => selectUser(user);
+            userList.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Error updating users list:", error);
+    }
+}
+
+async function selectUser(userName) {
+    currentUser = userName;
+    localStorage.setItem('currentUser', userName);
+    
+    try {
+        const userRef = doc(db, "users", userName);
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
+            // Skapa ny användare
+            const newUserData = {
+                totalExercises: 0,
+                correct: 0,
+                incorrect: 0,
+                tableStats: {},
+                lastPlayed: new Date().toISOString(),
+                fastestTime: null,
+                bestStreak: 0,
+                currentStreak: 0
+            };
+            
+            await setDoc(userRef, newUserData);
+            userStats[userName] = newUserData;
+        } else {
+            userStats[userName] = userDoc.data();
+        }
+        
+        const stats = userStats[userName];
         const level = Math.floor(stats.totalExercises / 100) + 1;
         const currentTitle = titles.find(t => t.level <= level) || titles[0];
         
-        const li = document.createElement('li');
-        li.className = 'user-list-item';
-        li.innerHTML = `
-            <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="user-list-avatar">
-            <div class="user-list-info">
-                <span class="user-list-name">${user}</span>
-                <span class="user-list-title">${currentTitle.title}</span>
+        document.getElementById('currentUser').innerHTML = `
+            <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
+            <div class="current-user-info">
+                <span class="current-user-name">${userName}</span>
+                <span class="current-user-title">${currentTitle.title}</span>
             </div>
         `;
-        li.onclick = () => selectUser(user);
-        userList.appendChild(li);
-    });
-}
-
-function selectUser(userName) {
-    currentUser = userName;
-    if (!userStats[userName]) {
-        userStats[userName] = {
-            totalExercises: 0,
-            correct: 0,
-            incorrect: 0,
-            tableStats: {},
-            lastPlayed: new Date().toISOString(),
-            fastestTime: null,
-            bestStreak: 0,
-            currentStreak: 0
-        };
+        document.getElementById('statsUserName').textContent = userName;
+        hideUserModal();
+        updateStats();
+        updateUserProfile();
+        
+    } catch (error) {
+        console.error("Error selecting user:", error);
     }
-    
-    const stats = userStats[userName];
-    const level = Math.floor(stats.totalExercises / 100) + 1;
-    const currentTitle = titles.find(t => t.level <= level) || titles[0];
-    
-    document.getElementById('currentUser').innerHTML = `
-        <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
-        <div class="current-user-info">
-            <span class="current-user-name">${userName}</span>
-            <span class="current-user-title">${currentTitle.title}</span>
-        </div>
-    `;
-    document.getElementById('statsUserName').textContent = userName;
-    hideUserModal();
-    updateStats();
-    updateUserProfile();
 }
 
 // Spelvariabler
@@ -357,13 +411,15 @@ function updateTableStats(isCorrect, timeSpent) {
 
     if (isCorrect) {
         stats.correct++;
+        userStats[currentUser].correct = (userStats[currentUser].correct || 0) + 1;
     } else {
         stats.incorrect++;
+        userStats[currentUser].incorrect = (userStats[currentUser].incorrect || 0) + 1;
     }
 
     // Uppdatera totala övningar för användaren
-    userStats[currentUser].totalExercises = Object.values(userStats[currentUser].tableStats)
-        .reduce((sum, table) => sum + table.total, 0);
+    userStats[currentUser].totalExercises = (userStats[currentUser].totalExercises || 0) + 1;
+    userStats[currentUser].lastPlayed = new Date().toISOString();
 }
 
 // Visa ledtråd
