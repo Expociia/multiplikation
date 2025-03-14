@@ -362,7 +362,7 @@ function findHardestTable() {
     return worstTable;
 }
 
-// Kontrollera svar
+// Check answer
 function checkAnswer() {
     const num1 = parseInt(number1Element.textContent);
     const num2 = parseInt(number2Element.textContent);
@@ -377,18 +377,18 @@ function checkAnswer() {
         feedbackElement.style.color = 'green';
         updateTableStats(true, timeSpent);
         
-        // Uppdatera snabbaste tid
+        // Update fastest time
         if (!userStats[currentUser].fastestTime || timeSpent < userStats[currentUser].fastestTime) {
             userStats[currentUser].fastestTime = timeSpent;
         }
         
-        // Uppdatera bästa svit
+        // Update best streak
         userStats[currentUser].currentStreak = (userStats[currentUser].currentStreak || 0) + 1;
         if (userStats[currentUser].currentStreak > (userStats[currentUser].bestStreak || 0)) {
             userStats[currentUser].bestStreak = userStats[currentUser].currentStreak;
         }
         
-        // Uppdatera återstående problem för utmaningsläge
+        // Update remaining problems for challenge mode
         if (gameMode === 'challenge' && remainingProblems !== null) {
             remainingProblems--;
             if (remainingProblems === 0) {
@@ -405,7 +405,7 @@ function checkAnswer() {
         hintButton.style.display = 'block';
         updateTableStats(false, timeSpent);
         
-        // Återställ svit vid fel
+        // Reset streak on incorrect answer
         userStats[currentUser].currentStreak = 0;
     }
 
@@ -417,7 +417,7 @@ function checkAnswer() {
     updateUserProfile();
 }
 
-// Uppdatera statistik för aktuell tabell
+// Update statistics for current table
 function updateTableStats(isCorrect, timeSpent) {
     if (!userStats[currentUser].tableStats[currentTable]) {
         userStats[currentUser].tableStats[currentTable] = {
@@ -426,7 +426,7 @@ function updateTableStats(isCorrect, timeSpent) {
             incorrect: 0,
             totalTime: 0,
             averageTime: 0,
-            times: [] // Sparar alla tider för analys
+            times: [] // Store all times for analysis
         };
     }
 
@@ -444,12 +444,12 @@ function updateTableStats(isCorrect, timeSpent) {
         userStats[currentUser].incorrect = (userStats[currentUser].incorrect || 0) + 1;
     }
 
-    // Uppdatera totala övningar för användaren
+    // Update total exercises for user
     userStats[currentUser].totalExercises = (userStats[currentUser].totalExercises || 0) + 1;
     userStats[currentUser].lastPlayed = new Date().toISOString();
 }
 
-// Visa ledtråd
+// Show hint
 function showHint() {
     const num1 = parseInt(number1Element.textContent);
     const hintList = hints[num1];
@@ -470,18 +470,18 @@ function showHint() {
     }
 }
 
-// Uppdatera statistikvy
+// Update statistics view
 function updateStats() {
     if (!currentUser) return;
 
     const stats = userStats[currentUser];
     
-    // Uppdatera översikt
+    // Update overview
     document.getElementById('totalExercises').textContent = stats.totalExercises;
     document.getElementById('totalCorrect').textContent = stats.correct;
     document.getElementById('totalIncorrect').textContent = stats.incorrect;
 
-    // Hitta svåraste och bästa tabeller
+    // Find hardest and best tables
     const tableStats = Object.entries(stats.tableStats);
     const hardestTables = tableStats
         .sort((a, b) => {
@@ -505,43 +505,43 @@ function updateStats() {
         })
         .slice(0, 3);
 
-    // Hitta snabbaste tabeller
+    // Find fastest tables
     const fastestTables = tableStats
-        .filter(([_, stat]) => stat.total >= 5) // Minst 5 tal för att räknas med
+        .filter(([_, stat]) => stat.total >= 5) // At least 5 problems to be counted
         .sort((a, b) => a[1].averageTime - b[1].averageTime)
         .slice(0, 3);
 
-    // Hitta långsammaste tabeller
+    // Find slowest tables
     const slowestTables = tableStats
-        .filter(([_, stat]) => stat.total >= 5) // Minst 5 tal för att räknas med
+        .filter(([_, stat]) => stat.total >= 5) // At least 5 problems to be counted
         .sort((a, b) => b[1].averageTime - a[1].averageTime)
         .slice(0, 3);
 
-    // Uppdatera svåraste tabeller
+    // Update hardest tables list
     const hardestList = document.getElementById('hardestTables');
     hardestList.innerHTML = hardestTables.map(([table, stat]) => 
         `<li>${table}:ans tabell (${Math.round(stat.correct/stat.total * 100)}% rätt)</li>`
     ).join('');
 
-    // Uppdatera bästa tabeller
+    // Update best tables list
     const bestList = document.getElementById('bestTables');
     bestList.innerHTML = bestTables.map(([table, stat]) => 
         `<li>${table}:ans tabell (${Math.round(stat.correct/stat.total * 100)}% rätt)</li>`
     ).join('');
 
-    // Uppdatera snabbaste tabeller
+    // Update fastest tables list
     const fastestList = document.getElementById('fastestTables');
     fastestList.innerHTML = fastestTables.map(([table, stat]) => 
         `<li>${table}:ans tabell (${(stat.averageTime/1000).toFixed(2)} sekunder)</li>`
     ).join('');
 
-    // Uppdatera långsammaste tabeller
+    // Update slowest tables list
     const slowestList = document.getElementById('slowestTables');
     slowestList.innerHTML = slowestTables.map(([table, stat]) => 
         `<li>${table}:ans tabell (${(stat.averageTime/1000).toFixed(2)} sekunder)</li>`
     ).join('');
 
-    // Uppdatera detaljerad statistik
+    // Update detailed statistics
     const tableDetails = document.getElementById('tableDetails');
     tableDetails.innerHTML = tableStats.map(([table, stat]) => `
         <div class="table-stat">
@@ -553,12 +553,12 @@ function updateStats() {
     `).join('');
 }
 
-// Återställ statistik
+// Reset statistics
 function resetStats() {
     if (!currentUser) return;
     
     if (confirm('Är du säker på att du vill återställa din statistik? Detta går inte att ångra.')) {
-        // Behåll användaren men återställ all statistik
+        // Keep the user but reset all statistics
         userStats[currentUser] = {
             totalExercises: 0,
             correct: 0,
@@ -570,24 +570,24 @@ function resetStats() {
             currentStreak: 0
         };
         
-        // Återställ aktuella spelvariabler
+        // Reset current game variables
         score = 0;
         correct = 0;
         incorrect = 0;
         
-        // Uppdatera visningen
+        // Update display
         scoreElement.textContent = '0';
         correctElement.textContent = '0';
         incorrectElement.textContent = '0';
         
-        // Spara och uppdatera statistik
+        // Save and update statistics
         saveUserData();
         updateStats();
         
-        // Generera ny uppgift
+        // Generate new problem
         generateProblem();
         
-        // Visa bekräftelse
+        // Show confirmation
         feedbackElement.textContent = 'Statistik återställd!';
         feedbackElement.style.color = '#4CAF50';
         setTimeout(() => {
@@ -596,7 +596,7 @@ function resetStats() {
     }
 }
 
-// Uppdatera användarprofil
+// Update user profile
 function updateUserProfile() {
     if (!currentUser) return;
     
@@ -604,22 +604,22 @@ function updateUserProfile() {
     const level = Math.floor(stats.totalExercises / 100) + 1;
     const levelProgress = (stats.totalExercises % 100) / 100 * 100;
     
-    // Uppdatera nivå och progress bar
+    // Update level and progress bar
     document.getElementById('userLevel').textContent = level;
     document.getElementById('levelProgress').style.width = `${levelProgress}%`;
     
-    // Uppdatera titel
+    // Update title
     const currentTitle = titles.find(t => t.level <= level) || titles[titles.length - 1];
     document.getElementById('userTitle').textContent = currentTitle.title;
     
-    // Uppdatera avatar
+    // Update avatar
     document.getElementById('userAvatar').src = `avatars/level${Math.min(level, 8)}.png`;
     
-    // Uppdatera utmärkelser
+    // Update achievements
     updateAchievements(stats);
 }
 
-// Uppdatera utmärkelser
+// Update achievements
 function updateAchievements(stats) {
     const achievementsList = document.getElementById('achievementsList');
     if (!achievementsList) return;
@@ -640,7 +640,7 @@ function updateAchievements(stats) {
     achievementsList.innerHTML = achievementsHTML;
 }
 
-// Starta spel
+// Start game
 function startGame(gameType) {
     gameMode = 'challenge';
     score = 0;
@@ -649,12 +649,12 @@ function startGame(gameType) {
     remainingProblems = gameType.problems;
     timeLimit = gameType.timeLimit;
     
-    // Spara valda tabeller
+    // Save selected tables
     if (Array.isArray(gameType.tables)) {
         selectedTables = gameType.tables;
     }
     
-    // Visa nedräkning
+    // Show countdown
     const gameModal = document.getElementById('gameModal');
     const countdown = document.getElementById('countdown');
     const gameSummary = document.getElementById('gameSummary');
@@ -662,7 +662,7 @@ function startGame(gameType) {
     countdown.style.display = 'block';
     gameSummary.style.display = 'none';
     
-    // Starta nedräkning
+    // Start countdown
     let count = 3;
     countdown.textContent = count;
     countdown.classList.add('animate');
@@ -680,25 +680,25 @@ function startGame(gameType) {
     }, 1000);
 }
 
-// Starta själva spelet
+// Start actual game
 function startGamePlay(gameType) {
-    // Visa spelområdet
+    // Show game area
     document.querySelector('.game-play-area').style.display = 'block';
     
-    // Uppdatera UI
+    // Update UI
     scoreElement.textContent = '0';
     correctElement.textContent = '0';
     incorrectElement.textContent = '0';
     
-    // Sätt fokus på svarsfältet
+    // Set focus on answer field
     answerInput.focus();
     
-    // Sätt upp tidsgräns om det finns
+    // Set up time limit if there is one
     if (timeLimit) {
         startTimer(timeLimit);
     }
     
-    // Välj tabeller baserat på speltyp om det inte är ett anpassat spel
+    // Select tables based on game type if it's not a custom game
     if (!Array.isArray(gameType.tables)) {
         if (gameType.tables === 'all') {
             selectedTables = Array.from({length: 10}, (_, i) => i + 1);
@@ -711,56 +711,56 @@ function startGamePlay(gameType) {
         }
     }
     
-    // Starta spelet
+    // Start game
     generateProblem();
 }
 
-// Avsluta spel
+// End game
 function endGame() {
     if (gameTimer) {
         clearInterval(gameTimer);
     }
     
-    // Dölj spelområdet
+    // Hide game area
     document.querySelector('.game-play-area').style.display = 'none';
     
-    // Beräkna genomsnittlig tid
+    // Calculate average time
     const totalTime = Object.values(userStats[currentUser].tableStats)
         .reduce((sum, stat) => sum + stat.totalTime, 0);
     const totalProblems = Object.values(userStats[currentUser].tableStats)
         .reduce((sum, stat) => sum + stat.total, 0);
     const avgTime = totalProblems > 0 ? totalTime / totalProblems : 0;
     
-    // Uppdatera sammanfattning
+    // Update summary
     document.getElementById('summaryCorrect').textContent = correct;
     document.getElementById('summaryIncorrect').textContent = incorrect;
     document.getElementById('summaryAvgTime').textContent = (avgTime/1000).toFixed(2);
     document.getElementById('summaryBestStreak').textContent = userStats[currentUser].bestStreak;
     
-    // Visa sammanfattning
+    // Show summary
     const gameModal = document.getElementById('gameModal');
     const countdown = document.getElementById('countdown');
     const gameSummary = document.getElementById('gameSummary');
     countdown.style.display = 'none';
     gameSummary.style.display = 'block';
     
-    // Återgå till övningsläge
+    // Return to practice mode
     gameMode = 'practice';
     remainingProblems = null;
     timeLimit = null;
     
-    // Uppdatera statistik
+    // Update statistics
     updateStats();
     updateUserProfile();
 }
 
-// Starta timer
+// Start timer
 function startTimer(seconds) {
     let timeLeft = seconds;
     const gameArea = document.querySelector('.game-area');
     if (!gameArea) return;
     
-    // Lägg till timer-element
+    // Add timer element
     gameArea.insertAdjacentHTML('afterbegin', `
         <div id="timer" class="timer">Tid kvar: ${timeLeft}s</div>
     `);
@@ -779,7 +779,7 @@ function startTimer(seconds) {
     }, 1000);
 }
 
-// Hitta svåraste tabeller
+// Find hardest tables
 function findHardestTables(count) {
     const tableStats = userStats[currentUser].tableStats;
     return Object.entries(tableStats)
@@ -794,11 +794,11 @@ function findHardestTables(count) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Vänta på att Firebase är redo
+    // Wait for Firebase to be ready
     if (window.firebaseReady) {
         initializeApp();
     } else {
-        // Om Firebase inte är redo, vänta på det
+        // If Firebase is not ready, wait for it
         const checkFirebase = setInterval(() => {
             if (window.firebaseReady) {
                 clearInterval(checkFirebase);
@@ -808,7 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Initialisera applikationen
+// Initialize application
 function initializeApp() {
     loadUserData();
     if (!currentUser) {
@@ -826,7 +826,7 @@ function initializeApp() {
         });
     });
 
-    // Användarhantering
+    // User management
     document.getElementById('changeUser').addEventListener('click', showUserModal);
     document.getElementById('saveUser').addEventListener('click', () => {
         const userName = document.getElementById('userName').value.trim();
@@ -835,7 +835,7 @@ function initializeApp() {
         }
     });
 
-    // Spelhantering
+    // Game management
     checkButton.addEventListener('click', checkAnswer);
     answerInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -844,12 +844,12 @@ function initializeApp() {
     });
     hintButton.addEventListener('click', showHint);
 
-    // Träningsläge
+    // Training mode
     document.getElementById('trainingMode').addEventListener('change', (e) => {
         trainingMode = e.target.value;
     });
 
-    // Tabellval
+    // Table selection
     document.querySelectorAll('.table-selection input').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
             selectedTables = Array.from(document.querySelectorAll('.table-selection input:checked'))
@@ -857,10 +857,10 @@ function initializeApp() {
         });
     });
 
-    // Återställ statistik
+    // Reset statistics
     document.getElementById('resetStats').addEventListener('click', resetStats);
 
-    // Lägg till event listeners för speltyper
+    // Add event listeners for game types
     document.querySelectorAll('.game-type-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const gameType = gameTypes.find(type => type.name === btn.dataset.type);
@@ -868,7 +868,7 @@ function initializeApp() {
         });
     });
 
-    // Hantera anpassat spel
+    // Handle custom game
     document.getElementById('startCustomGame').addEventListener('click', () => {
         const problems = parseInt(document.getElementById('customProblems').value);
         const selectedTables = Array.from(document.querySelectorAll('.custom-game .table-selection input:checked'))
@@ -893,7 +893,7 @@ function initializeApp() {
         });
     });
 
-    // Hantera spelmodalen
+    // Handle game modal
     document.getElementById('playAgain').addEventListener('click', () => {
         document.getElementById('gameModal').style.display = 'none';
         const gameType = gameTypes.find(type => type.name === "Alla tabeller");
