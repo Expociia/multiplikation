@@ -1282,9 +1282,9 @@ input[type="checkbox"] {
 }
 
 .numpad-btn {
-    background-color: #f8f9fa;
+    background-color: #e9ecef;
     border: 1px solid #dee2e6;
-    border-radius: 50%;
+    border-radius: 8px;
     width: 45px;
     height: 45px;
     font-size: 1.2em;
@@ -1295,6 +1295,7 @@ input[type="checkbox"] {
     transition: background-color 0.2s;
     padding: 0;
     margin: 0 auto;
+    color: #333;
 }
 
 .numpad-btn[data-value="clear"] {
@@ -1304,12 +1305,12 @@ input[type="checkbox"] {
 
 .numpad-btn[data-value="enter"] {
     background-color: #28a745;
-    color: white;
+    color: #fff;
 }
 
 .numpad-btn:active {
     transform: scale(0.95);
-    background-color: #e9ecef;
+    background-color: #dee2e6;
 }
 
 /* Dölj knappsatsen på desktop */
