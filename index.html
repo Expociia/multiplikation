@@ -255,7 +255,7 @@
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-        // Gör Firebase-funktioner tillgängliga globalt
+        // Make Firebase functions globally available
         window.db = db;
         window.collection = collection;
         window.getDocs = getDocs;
@@ -263,13 +263,14 @@
         window.getDoc = getDoc;
         window.setDoc = setDoc;
 
-        // Signalera att Firebase är redo
+        // Signal that Firebase is ready
         window.firebaseReady = true;
 
-        // Ladda script.js
-        const script = document.createElement('script');
-        script.src = 'script.js';
-        document.body.appendChild(script);
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
     </script>
+    <script src="script.js"></script>
 </body>
 </html> 

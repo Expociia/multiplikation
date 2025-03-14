@@ -66,12 +66,23 @@ async function saveUserData() {
 
 // User interface management
 function showUserModal() {
-    document.getElementById('userModal').style.display = 'block';
-    loadUserData(); // Update the list every time the modal is opened
+    const modal = document.getElementById('userModal');
+    modal.style.display = 'flex';
+    
+    // Clear any existing input
+    const userNameInput = document.getElementById('userName');
+    if (userNameInput) {
+        userNameInput.value = '';
+        userNameInput.focus();
+    }
+    
+    // Update the list of users
+    updatePreviousUsersList();
 }
 
 function hideUserModal() {
-    document.getElementById('userModal').style.display = 'none';
+    const modal = document.getElementById('userModal');
+    modal.style.display = 'none';
 }
 
 async function updatePreviousUsersList() {
