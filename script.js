@@ -10,7 +10,6 @@ async function loadUserData() {
         querySnapshot.forEach((doc) => {
             userStats[doc.id] = doc.data();
         });
-        updatePreviousUsersList();
         
         // Om vi har en sparad användare, ladda deras data
         if (currentUser) {
@@ -34,15 +33,22 @@ async function loadUserData() {
                 document.getElementById('statsUserName').textContent = currentUser;
                 updateStats();
                 updateUserProfile();
+                generateProblem(); // Starta spelet direkt om vi har en användare
             } else {
                 // Om användaren inte finns i databasen, rensa localStorage
                 localStorage.removeItem('currentUser');
                 currentUser = null;
                 showUserModal();
             }
+        } else {
+            showUserModal();
         }
+        
+        // Uppdatera listan med användare
+        updatePreviousUsersList();
     } catch (error) {
         console.error("Error loading user data:", error);
+        showUserModal();
     }
 }
 
