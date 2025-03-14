@@ -178,11 +178,11 @@ let incorrect = 0;
 let currentTable = 0;
 let selectedTables = Array.from({length: 10}, (_, i) => i + 1);
 let trainingMode = 'free';
-let startTime = null; // For time measurement
-let gameMode = null; // 'practice' or 'challenge'
-let remainingProblems = 0; // For challenge mode
-let timeLimit = null; // For time limit
-let gameTimer = null; // For time limit
+let startTime = null;
+let gameMode = 'practice'; // Set default game mode
+let remainingProblems = null;
+let timeLimit = null;
+let gameTimer = null;
 
 // Game types
 const gameTypes = [
@@ -325,6 +325,18 @@ function generateProblem() {
     if (!currentUser) {
         showUserModal();
         return;
+    }
+
+    // Show game play area
+    const gamePlayArea = document.querySelector('.game-play-area');
+    if (gamePlayArea) {
+        gamePlayArea.style.display = 'block';
+    }
+
+    // Hide game type selector during active game
+    const gameTypeSelector = document.querySelector('.game-type-selector');
+    if (gameTypeSelector) {
+        gameTypeSelector.style.display = 'none';
     }
 
     let num1, num2;
@@ -653,6 +665,7 @@ function updateAchievements(stats) {
 
 // Start game
 function startGame(gameType) {
+    console.log('Starting game with type:', gameType);
     gameMode = 'challenge';
     score = 0;
     correct = 0;
@@ -660,32 +673,56 @@ function startGame(gameType) {
     remainingProblems = gameType.problems;
     timeLimit = gameType.timeLimit;
     
-    // Save selected tables
-    if (Array.isArray(gameType.tables)) {
-        selectedTables = gameType.tables;
-    }
+    // Reset UI elements
+    scoreElement.textContent = '0';
+    correctElement.textContent = '0';
+    incorrectElement.textContent = '0';
+    feedbackElement.textContent = '';
     
-    // Show countdown
+    // Show game modal
     const gameModal = document.getElementById('gameModal');
     const countdown = document.getElementById('countdown');
     const gameSummary = document.getElementById('gameSummary');
-    gameModal.style.display = 'flex';
-    countdown.style.display = 'block';
-    gameSummary.style.display = 'none';
+    if (gameModal && countdown && gameSummary) {
+        gameModal.style.display = 'flex';
+        countdown.style.display = 'block';
+        gameSummary.style.display = 'none';
+    }
+    
+    // Select tables based on game type
+    if (!Array.isArray(gameType.tables)) {
+        if (gameType.tables === 'all') {
+            selectedTables = Array.from({length: 10}, (_, i) => i + 1);
+        } else if (gameType.tables === 'high') {
+            selectedTables = [6, 7, 8, 9, 10];
+        } else if (gameType.tables === 'low') {
+            selectedTables = [1, 2, 3, 4, 5];
+        } else if (gameType.tables === 'hard') {
+            selectedTables = findHardestTables(3);
+        }
+    } else {
+        selectedTables = gameType.tables;
+    }
     
     // Start countdown
     let count = 3;
-    countdown.textContent = count;
-    countdown.classList.add('animate');
+    if (countdown) {
+        countdown.textContent = count;
+        countdown.classList.add('animate');
+    }
     
     const countdownInterval = setInterval(() => {
         count--;
-        countdown.textContent = count;
+        if (countdown) {
+            countdown.textContent = count;
+        }
         
         if (count <= 0) {
             clearInterval(countdownInterval);
-            countdown.classList.remove('animate');
-            countdown.style.display = 'none';
+            if (countdown) {
+                countdown.classList.remove('animate');
+                countdown.style.display = 'none';
+            }
             startGamePlay(gameType);
         }
     }, 1000);
@@ -805,30 +842,42 @@ function findHardestTables(count) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded');
     // Wait for Firebase to be ready
-    if (window.firebaseReady) {
-        initializeApp();
-    } else {
-        // If Firebase is not ready, wait for it
-        const checkFirebase = setInterval(() => {
-            if (window.firebaseReady) {
-                clearInterval(checkFirebase);
-                initializeApp();
-            }
-        }, 100);
-    }
+    const checkFirebase = setInterval(() => {
+        if (window.db && window.collection && window.getDocs && window.doc && window.getDoc && window.setDoc) {
+            console.log('Firebase is ready');
+            clearInterval(checkFirebase);
+            initializeApp();
+        } else {
+            console.log('Waiting for Firebase...');
+        }
+    }, 100);
 });
 
 // Initialize application
 function initializeApp() {
+    console.log('Initializing application');
+    
+    // Load user data first
     loadUserData();
-    if (!currentUser) {
-        showUserModal();
-    }
-
-    // Navigation
+    
+    // Set up navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            console.log('Navigation button clicked:', btn.dataset.view);
+            // Hide game play area when switching views
+            const gamePlayArea = document.querySelector('.game-play-area');
+            if (gamePlayArea) {
+                gamePlayArea.style.display = 'none';
+            }
+            
+            // Show game type selector when returning to game view
+            const gameTypeSelector = document.querySelector('.game-type-selector');
+            if (gameTypeSelector && btn.dataset.view === 'game') {
+                gameTypeSelector.style.display = 'block';
+            }
+            
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             
@@ -838,82 +887,149 @@ function initializeApp() {
     });
 
     // User management
-    document.getElementById('changeUser').addEventListener('click', showUserModal);
-    document.getElementById('saveUser').addEventListener('click', () => {
-        const userName = document.getElementById('userName').value.trim();
-        if (userName) {
-            selectUser(userName);
-        }
-    });
-
-    // Game management
-    checkButton.addEventListener('click', checkAnswer);
-    answerInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            checkAnswer();
-        }
-    });
-    hintButton.addEventListener('click', showHint);
-
-    // Training mode
-    document.getElementById('trainingMode').addEventListener('change', (e) => {
-        trainingMode = e.target.value;
-    });
-
-    // Table selection
-    document.querySelectorAll('.table-selection input').forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            selectedTables = Array.from(document.querySelectorAll('.table-selection input:checked'))
-                .map(cb => parseInt(cb.value));
+    const changeUserBtn = document.getElementById('changeUser');
+    const saveUserBtn = document.getElementById('saveUser');
+    const userNameInput = document.getElementById('userName');
+    
+    if (changeUserBtn) {
+        changeUserBtn.addEventListener('click', () => {
+            console.log('Change user button clicked');
+            showUserModal();
         });
-    });
+    }
+    
+    if (saveUserBtn && userNameInput) {
+        saveUserBtn.addEventListener('click', () => {
+            const userName = userNameInput.value.trim();
+            console.log('Save user button clicked, username:', userName);
+            if (userName) {
+                selectUser(userName);
+            }
+        });
+        
+        userNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const userName = userNameInput.value.trim();
+                if (userName) {
+                    selectUser(userName);
+                }
+            }
+        });
+    }
 
-    // Reset statistics
-    document.getElementById('resetStats').addEventListener('click', resetStats);
+    // Game controls
+    const checkBtn = document.getElementById('check');
+    const answerInput = document.getElementById('answer');
+    const hintBtn = document.getElementById('hint');
+    
+    if (checkBtn) {
+        checkBtn.addEventListener('click', checkAnswer);
+    }
+    
+    if (answerInput) {
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+    }
+    
+    if (hintBtn) {
+        hintBtn.addEventListener('click', showHint);
+    }
 
-    // Add event listeners for game types
+    // Game types
     document.querySelectorAll('.game-type-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            console.log('Game type button clicked:', btn.dataset.type);
             const gameType = gameTypes.find(type => type.name === btn.dataset.type);
-            startGame(gameType);
+            if (gameType) {
+                startGame(gameType);
+            }
         });
     });
 
-    // Handle custom game
-    document.getElementById('startCustomGame').addEventListener('click', () => {
-        const problems = parseInt(document.getElementById('customProblems').value);
-        const selectedTables = Array.from(document.querySelectorAll('.custom-game .table-selection input:checked'))
-            .map(cb => parseInt(cb.value));
-        
-        if (problems < 1) {
-            alert('Välj minst ett tal!');
-            return;
-        }
-        
-        if (selectedTables.length === 0) {
-            alert('Välj minst en tabell!');
-            return;
-        }
-        
-        startGame({
-            name: "Anpassat spel",
-            description: `${problems} tal från valda tabeller`,
-            problems: problems,
-            tables: selectedTables,
-            timeLimit: null
+    // Custom game
+    const startCustomGameBtn = document.getElementById('startCustomGame');
+    if (startCustomGameBtn) {
+        startCustomGameBtn.addEventListener('click', () => {
+            console.log('Start custom game button clicked');
+            const problemsInput = document.getElementById('customProblems');
+            const problems = problemsInput ? parseInt(problemsInput.value) : 10;
+            
+            const selectedTables = Array.from(document.querySelectorAll('.custom-game .table-selection input:checked'))
+                .map(cb => parseInt(cb.value));
+            
+            if (problems < 1) {
+                alert('Välj minst ett tal!');
+                return;
+            }
+            
+            if (selectedTables.length === 0) {
+                alert('Välj minst en tabell!');
+                return;
+            }
+            
+            startGame({
+                name: "Anpassat spel",
+                description: `${problems} tal från valda tabeller`,
+                problems: problems,
+                tables: selectedTables,
+                timeLimit: null
+            });
         });
-    });
+    }
 
-    // Handle game modal
-    document.getElementById('playAgain').addEventListener('click', () => {
-        document.getElementById('gameModal').style.display = 'none';
-        const gameType = gameTypes.find(type => type.name === "Alla tabeller");
-        startGame(gameType);
-    });
+    // Settings
+    const trainingModeSelect = document.getElementById('trainingMode');
+    if (trainingModeSelect) {
+        trainingModeSelect.addEventListener('change', (e) => {
+            console.log('Training mode changed to:', e.target.value);
+            trainingMode = e.target.value;
+        });
+    }
 
-    document.getElementById('closeSummary').addEventListener('click', () => {
-        document.getElementById('gameModal').style.display = 'none';
-    });
+    // Reset stats
+    const resetStatsBtn = document.getElementById('resetStats');
+    if (resetStatsBtn) {
+        resetStatsBtn.addEventListener('click', resetStats);
+    }
 
-    generateProblem();
+    // Game modal controls
+    const playAgainBtn = document.getElementById('playAgain');
+    const closeSummaryBtn = document.getElementById('closeSummary');
+    
+    if (playAgainBtn) {
+        playAgainBtn.addEventListener('click', () => {
+            console.log('Play again button clicked');
+            const gameModal = document.getElementById('gameModal');
+            if (gameModal) {
+                gameModal.style.display = 'none';
+            }
+            const gameType = gameTypes.find(type => type.name === "Alla tabeller");
+            if (gameType) {
+                startGame(gameType);
+            }
+        });
+    }
+    
+    if (closeSummaryBtn) {
+        closeSummaryBtn.addEventListener('click', () => {
+            console.log('Close summary button clicked');
+            const gameModal = document.getElementById('gameModal');
+            if (gameModal) {
+                gameModal.style.display = 'none';
+            }
+            // Show game type selector when closing summary
+            const gameTypeSelector = document.querySelector('.game-type-selector');
+            if (gameTypeSelector) {
+                gameTypeSelector.style.display = 'block';
+            }
+        });
+    }
+
+    // Make selectUser function globally available
+    window.selectUser = selectUser;
+
+    console.log('Application initialized');
 } 
