@@ -620,21 +620,22 @@ function updateUserProfile() {
 // Uppdatera utmärkelser
 function updateAchievements(stats) {
     const achievementsList = document.getElementById('achievementsList');
-    achievementsList.innerHTML = '';
+    if (!achievementsList) return;
+    
+    let achievementsHTML = '';
     
     achievements.forEach(achievement => {
         const isUnlocked = achievement.condition(stats);
-        const card = document.createElement('div');
-        card.className = `achievement-card ${isUnlocked ? '' : 'locked'}`;
-        
-        card.innerHTML = `
-            <img src="${achievement.icon}" alt="${achievement.title}" class="achievement-icon">
-            <div class="achievement-title">${achievement.title}</div>
-            <div class="achievement-description">${achievement.description}</div>
+        achievementsHTML += `
+            <div class="achievement-card ${isUnlocked ? '' : 'locked'}">
+                <img src="${achievement.icon}" alt="${achievement.title}" class="achievement-icon">
+                <div class="achievement-title">${achievement.title}</div>
+                <div class="achievement-description">${achievement.description}</div>
+            </div>
         `;
-        
-        achievementsList.appendChild(card);
     });
+    
+    achievementsList.innerHTML = achievementsHTML;
 }
 
 // Starta spel
