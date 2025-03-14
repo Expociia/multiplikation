@@ -1304,10 +1304,10 @@ async function updateLeaderboard(type) {
         usersSnapshot.forEach(doc => {
             const userData = doc.data();
             users.push({
-                username: userData.username,
-                totalSolved: userData.totalSolved || 0,
-                correctAnswers: userData.correctAnswers || 0,
-                averageTime: userData.averageTime || 0,
+                username: doc.id, // Använd dokumentets ID som användarnamn
+                totalSolved: userData.totalExercises || 0,
+                correctAnswers: userData.correct || 0,
+                averageTime: userData.fastestTime || 0,
                 bestStreak: userData.bestStreak || 0
             });
         });
