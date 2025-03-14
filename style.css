@@ -1269,4 +1269,39 @@ input[type="checkbox"] {
 .user-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Numerisk knappsats */
+.numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 300px;
+    margin: 20px auto;
+    padding: 10px;
+}
+
+.numpad-btn {
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 8px;
+    padding: 15px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.numpad-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.numpad-btn:active {
+    background-color: #d0d0d0;
+}
+
+/* Dölj knappsatsen på desktop */
+@media (min-width: 768px) {
+    .numpad {
+        display: none;
+    }
 } 

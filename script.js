@@ -1132,16 +1132,29 @@ function initializeApp() {
     const answerInput = document.getElementById('answer');
     const hintBtn = document.getElementById('hint');
     
-    if (checkBtn) {
-        checkBtn.addEventListener('click', checkAnswer);
-    }
-    
-    if (answerInput) {
-        answerInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+    // Hantera numerisk knappsats
+    document.querySelectorAll('.numpad-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const value = btn.dataset.value;
+            
+            if (value === 'clear') {
+                answerInput.value = '';
+            } else if (value === 'enter') {
                 checkAnswer();
+            } else {
+                answerInput.value += value;
+            }
+            
+            // Fokusera på input-fältet för att undvika att tangentbordet visas
+            answerInput.focus();
+            if (document.activeElement) {
+                document.activeElement.blur();
             }
         });
+    });
+    
+    if (checkBtn) {
+        checkBtn.addEventListener('click', checkAnswer);
     }
     
     if (hintBtn) {
