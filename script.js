@@ -76,28 +76,32 @@ function hideUserModal() {
 
 async function updatePreviousUsersList() {
     const userList = document.getElementById('previousUsers');
+    if (!userList) return;
+    
     userList.innerHTML = '';
     
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
+        let userListHTML = '';
+        
         querySnapshot.forEach((document) => {
             const user = document.id;
             const stats = document.data();
             const level = Math.floor(stats.totalExercises / 100) + 1;
             const currentTitle = titles.find(t => t.level <= level) || titles[0];
             
-            const li = document.createElement('li');
-            li.className = 'user-list-item';
-            li.innerHTML = `
-                <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="user-list-avatar">
-                <div class="user-list-info">
-                    <span class="user-list-name">${user}</span>
-                    <span class="user-list-title">${currentTitle.title}</span>
-                </div>
+            userListHTML += `
+                <li class="user-list-item" onclick="selectUser('${user}')">
+                    <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="user-list-avatar">
+                    <div class="user-list-info">
+                        <span class="user-list-name">${user}</span>
+                        <span class="user-list-title">${currentTitle.title}</span>
+                    </div>
+                </li>
             `;
-            li.onclick = () => selectUser(user);
-            userList.appendChild(li);
         });
+        
+        userList.innerHTML = userListHTML;
     } catch (error) {
         console.error("Error updating users list:", error);
     }
@@ -150,6 +154,9 @@ async function selectUser(userName) {
         console.error("Error selecting user:", error);
     }
 }
+
+// Gör selectUser tillgänglig globalt
+window.selectUser = selectUser;
 
 // Spelvariabler
 let score = 0;
