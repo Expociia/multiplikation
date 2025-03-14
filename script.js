@@ -255,111 +255,15 @@ function logoutUser() {
 }
 
 // User interface management
-function showUserModal() {
-    const modal = document.getElementById('userModal');
+function showGameModal() {
+    const modal = document.getElementById('gameModal');
     modal.style.display = 'flex';
-    
-    // Clear any existing input
-    const userNameInput = document.getElementById('userName');
-    if (userNameInput) {
-        userNameInput.value = '';
-        userNameInput.focus();
-    }
-    
-    // Update the list of users
-    updatePreviousUsersList();
 }
 
-function hideUserModal() {
-    const modal = document.getElementById('userModal');
+function hideGameModal() {
+    const modal = document.getElementById('gameModal');
     modal.style.display = 'none';
 }
-
-async function updatePreviousUsersList() {
-    const userList = document.getElementById('previousUsers');
-    if (!userList) return;
-    
-    userList.innerHTML = '';
-    
-    try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        let userListHTML = '';
-        
-        // Use Array.from instead of forEach
-        const documents = Array.from(querySnapshot.docs);
-        for (const document of documents) {
-            const user = document.id;
-            const stats = document.data();
-            const level = Math.floor(stats.totalExercises / 100) + 1;
-            const currentTitle = titles.find(t => t.level <= level) || titles[0];
-            
-            userListHTML += `
-                <li class="user-list-item" onclick="selectUser('${user}')">
-                    <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="user-list-avatar">
-                    <div class="user-list-info">
-                        <span class="user-list-name">${user}</span>
-                        <span class="user-list-title">${currentTitle.title}</span>
-                    </div>
-                </li>
-            `;
-        }
-        
-        userList.innerHTML = userListHTML;
-    } catch (error) {
-        console.error("Error updating users list:", error);
-    }
-}
-
-async function selectUser(userName) {
-    currentUser = userName;
-    localStorage.setItem('currentUser', userName);
-    
-    try {
-        const userRef = doc(db, "users", userName);
-        const userDoc = await getDoc(userRef);
-        
-        if (!userDoc.exists()) {
-            // Skapa ny användare
-            const newUserData = {
-                totalExercises: 0,
-                correct: 0,
-                incorrect: 0,
-                tableStats: {},
-                lastPlayed: new Date().toISOString(),
-                fastestTime: null,
-                bestStreak: 0,
-                currentStreak: 0
-            };
-            
-            await setDoc(userRef, newUserData);
-            userStats[userName] = newUserData;
-        } else {
-            userStats[userName] = userDoc.data();
-        }
-        
-        const stats = userStats[userName];
-        const level = Math.floor(stats.totalExercises / 100) + 1;
-        const currentTitle = titles.find(t => t.level <= level) || titles[0];
-        
-        document.getElementById('currentUser').innerHTML = `
-            <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
-            <div class="current-user-info">
-                <span class="current-user-name">${userName}</span>
-                <span class="current-user-title">${currentTitle.title}</span>
-            </div>
-        `;
-        document.getElementById('statsUserName').textContent = userName;
-        hideUserModal();
-        updateStats();
-        updateUserProfile();
-        
-    } catch (error) {
-        console.error("Error selecting user:", error);
-    }
-}
-
-// Gör selectUser tillgänglig globalt
-window.selectUser = selectUser;
 
 // Game variables
 let score = 0;
@@ -513,7 +417,7 @@ const achievements = [
 // Generate new problem
 function generateProblem() {
     if (!currentUser) {
-        showUserModal();
+        showLoginPage();
         return;
     }
 
@@ -1180,7 +1084,7 @@ function initializeApp() {
     if (changeUserBtn) {
         changeUserBtn.addEventListener('click', () => {
             console.log('Change user button clicked');
-            showUserModal();
+            logoutUser();
         });
     }
     
