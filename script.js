@@ -1,5 +1,5 @@
 // User management
-let currentUser = localStorage.getItem('currentUser');
+let currentUser = null;
 let userStats = {};
 
 // Load saved data from Firebase
@@ -11,44 +11,29 @@ async function loadUserData() {
             userStats[doc.id] = doc.data();
         });
         
-        // If we have a saved user, load their data
-        if (currentUser) {
-            // Check if the user still exists in the database
-            const userRef = doc(db, "users", currentUser);
+        // Check if we have a saved login token
+        const savedToken = localStorage.getItem('userToken');
+        if (savedToken) {
+            const [userName, token] = savedToken.split(':');
+            // Verify token
+            const userRef = doc(db, "users", userName);
             const userDoc = await getDoc(userRef);
             
-            if (userDoc.exists()) {
+            if (userDoc.exists() && userDoc.data().token === token) {
+                currentUser = userName;
                 userStats[currentUser] = userDoc.data();
-                const stats = userStats[currentUser];
-                const level = Math.floor(stats.totalExercises / 100) + 1;
-                const currentTitle = titles.find(t => t.level <= level) || titles[0];
-                
-                document.getElementById('currentUser').innerHTML = `
-                    <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
-                    <div class="current-user-info">
-                        <span class="current-user-name">${currentUser}</span>
-                        <span class="current-user-title">${currentTitle.title}</span>
-                    </div>
-                `;
-                document.getElementById('statsUserName').textContent = currentUser;
-                updateStats();
-                updateUserProfile();
-                generateProblem(); // Start the game directly if we have a user
+                updateUserInterface();
+                generateProblem();
             } else {
-                // If the user doesn't exist in the database, clear localStorage
-                localStorage.removeItem('currentUser');
-                currentUser = null;
-                showUserModal();
+                localStorage.removeItem('userToken');
+                showLoginPage();
             }
         } else {
-            showUserModal();
+            showLoginPage();
         }
-        
-        // Update the list of users
-        updatePreviousUsersList();
     } catch (error) {
         console.error("Error loading user data:", error);
-        showUserModal();
+        showLoginPage();
     }
 }
 
@@ -62,6 +47,211 @@ async function saveUserData() {
     } catch (error) {
         console.error("Error saving user data:", error);
     }
+}
+
+// Show login page
+function showLoginPage() {
+    // Hide main container
+    document.querySelector('.container').style.display = 'none';
+    
+    // Show login container
+    const loginContainer = document.getElementById('loginContainer');
+    if (!loginContainer) {
+        document.body.insertAdjacentHTML('afterbegin', `
+            <div id="loginContainer" class="login-container">
+                <h1>Multiplikationsträning</h1>
+                <div class="existing-users">
+                    <h2>Välj användare</h2>
+                    <div id="userList" class="user-list"></div>
+                </div>
+                <div class="new-user">
+                    <h2>Skapa ny användare</h2>
+                    <form id="registerForm" class="user-form">
+                        <input type="text" id="newUserName" placeholder="Användarnamn" required>
+                        <input type="password" id="newPassword" placeholder="Lösenord" required>
+                        <button type="submit">Skapa användare</button>
+                    </form>
+                </div>
+            </div>
+        `);
+        
+        // Set up event listeners for the login page
+        setupLoginPageListeners();
+    }
+    
+    // Update user list
+    updateUserList();
+}
+
+// Update user list on login page
+async function updateUserList() {
+    const userList = document.getElementById('userList');
+    if (!userList) return;
+    
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        let userListHTML = '';
+        
+        querySnapshot.forEach((doc) => {
+            const userData = doc.data();
+            const level = Math.floor(userData.totalExercises / 100) + 1;
+            const currentTitle = titles.find(t => t.level <= level) || titles[0];
+            
+            userListHTML += `
+                <div class="user-card">
+                    <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">${doc.id}</span>
+                        <span class="user-title">${currentTitle.title}</span>
+                    </div>
+                    <form class="login-form">
+                        <input type="password" placeholder="Lösenord" class="password-input">
+                        <button type="submit" data-username="${doc.id}">Logga in</button>
+                    </form>
+                </div>
+            `;
+        });
+        
+        userList.innerHTML = userListHTML;
+    } catch (error) {
+        console.error("Error updating user list:", error);
+    }
+}
+
+// Set up login page event listeners
+function setupLoginPageListeners() {
+    // Register form
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userName = document.getElementById('newUserName').value.trim();
+            const password = document.getElementById('newPassword').value;
+            
+            try {
+                // Check if user already exists
+                const userRef = doc(db, "users", userName);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    alert('Användarnamnet är redan taget');
+                    return;
+                }
+                
+                // Create new user
+                const token = generateToken();
+                const newUserData = {
+                    password: hashPassword(password),
+                    token: token,
+                    totalExercises: 0,
+                    correct: 0,
+                    incorrect: 0,
+                    tableStats: {},
+                    lastPlayed: new Date().toISOString(),
+                    fastestTime: null,
+                    bestStreak: 0,
+                    currentStreak: 0,
+                    achievements: [],
+                    level: 1
+                };
+                
+                await setDoc(userRef, newUserData);
+                userStats[userName] = newUserData;
+                
+                // Log in the new user
+                await loginUser(userName, token);
+                
+            } catch (error) {
+                console.error("Error creating user:", error);
+                alert('Ett fel uppstod när användaren skulle skapas');
+            }
+        });
+    }
+    
+    // Login forms
+    document.addEventListener('submit', async (e) => {
+        if (e.target.classList.contains('login-form')) {
+            e.preventDefault();
+            const userName = e.target.querySelector('button').dataset.username;
+            const password = e.target.querySelector('.password-input').value;
+            
+            try {
+                const userRef = doc(db, "users", userName);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists() && verifyPassword(password, userDoc.data().password)) {
+                    const token = generateToken();
+                    // Update token in database
+                    await updateDoc(userRef, { token: token });
+                    await loginUser(userName, token);
+                } else {
+                    alert('Fel lösenord');
+                }
+            } catch (error) {
+                console.error("Error logging in:", error);
+                alert('Ett fel uppstod vid inloggning');
+            }
+        }
+    });
+}
+
+// Login user
+async function loginUser(userName, token) {
+    currentUser = userName;
+    localStorage.setItem('userToken', `${userName}:${token}`);
+    
+    // Hide login container
+    const loginContainer = document.getElementById('loginContainer');
+    if (loginContainer) {
+        loginContainer.style.display = 'none';
+    }
+    
+    // Show main container
+    document.querySelector('.container').style.display = 'block';
+    
+    // Update interface
+    updateUserInterface();
+    generateProblem();
+}
+
+// Update user interface after login
+function updateUserInterface() {
+    const stats = userStats[currentUser];
+    const level = Math.floor(stats.totalExercises / 100) + 1;
+    const currentTitle = titles.find(t => t.level <= level) || titles[0];
+    
+    document.getElementById('currentUser').innerHTML = `
+        <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="current-user-avatar">
+        <div class="current-user-info">
+            <span class="current-user-name">${currentUser}</span>
+            <span class="current-user-title">${currentTitle.title}</span>
+        </div>
+    `;
+    document.getElementById('statsUserName').textContent = currentUser;
+    updateStats();
+    updateUserProfile();
+}
+
+// Utility functions for password handling
+function generateToken() {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+function hashPassword(password) {
+    // In a real application, use a proper hashing algorithm
+    // This is a simple example
+    return btoa(password);
+}
+
+function verifyPassword(password, hashedPassword) {
+    return btoa(password) === hashedPassword;
+}
+
+// Logout user
+function logoutUser() {
+    localStorage.removeItem('userToken');
+    currentUser = null;
+    showLoginPage();
 }
 
 // User interface management
@@ -580,17 +770,23 @@ function updateStats() {
 function resetStats() {
     if (!currentUser) return;
     
-    if (confirm('Är du säker på att du vill återställa din statistik? Detta går inte att ångra.')) {
-        // Keep the user but reset all statistics
+    if (confirm('Är du säker på att du vill återställa din statistik? Dina utmärkelser och level behålls.')) {
+        // Save current level and achievements
+        const currentLevel = Math.floor(userStats[currentUser].totalExercises / 100) + 1;
+        const achievements = userStats[currentUser].achievements || [];
+        
+        // Reset statistics but keep level and achievements
         userStats[currentUser] = {
-            totalExercises: 0,
+            ...userStats[currentUser], // Keep existing properties like password and token
+            totalExercises: (currentLevel - 1) * 100, // Keep level
             correct: 0,
             incorrect: 0,
             tableStats: {},
             lastPlayed: new Date().toISOString(),
             fastestTime: null,
             bestStreak: 0,
-            currentStreak: 0
+            currentStreak: 0,
+            achievements: achievements // Keep achievements
         };
         
         // Reset current game variables
@@ -606,9 +802,7 @@ function resetStats() {
         // Save and update statistics
         saveUserData();
         updateStats();
-        
-        // Generate new problem
-        generateProblem();
+        updateUserProfile();
         
         // Show confirmation
         feedbackElement.textContent = 'Statistik återställd!';
@@ -855,12 +1049,104 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
 });
 
+// Handle user settings
+function setupSettingsListeners() {
+    const saveUsernameBtn = document.getElementById('saveUsername');
+    const savePasswordBtn = document.getElementById('savePassword');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (saveUsernameBtn) {
+        saveUsernameBtn.addEventListener('click', async () => {
+            const newUsername = document.getElementById('changeUsername').value.trim();
+            if (!newUsername) {
+                alert('Ange ett nytt användarnamn');
+                return;
+            }
+            
+            try {
+                // Check if new username is available
+                const userRef = doc(db, "users", newUsername);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    alert('Användarnamnet är redan taget');
+                    return;
+                }
+                
+                // Get current user data
+                const currentUserRef = doc(db, "users", currentUser);
+                const currentUserData = userStats[currentUser];
+                
+                // Create new user document
+                await setDoc(userRef, currentUserData);
+                
+                // Delete old user document
+                await deleteDoc(currentUserRef);
+                
+                // Update local storage and variables
+                localStorage.setItem('userToken', `${newUsername}:${currentUserData.token}`);
+                userStats[newUsername] = currentUserData;
+                delete userStats[currentUser];
+                currentUser = newUsername;
+                
+                // Update interface
+                updateUserInterface();
+                document.getElementById('changeUsername').value = '';
+                
+                alert('Användarnamn ändrat!');
+            } catch (error) {
+                console.error("Error changing username:", error);
+                alert('Ett fel uppstod när användarnamnet skulle ändras');
+            }
+        });
+    }
+    
+    if (savePasswordBtn) {
+        savePasswordBtn.addEventListener('click', async () => {
+            const newPassword = document.getElementById('changePassword').value;
+            if (!newPassword) {
+                alert('Ange ett nytt lösenord');
+                return;
+            }
+            
+            try {
+                // Update password in database
+                const userRef = doc(db, "users", currentUser);
+                await updateDoc(userRef, {
+                    password: hashPassword(newPassword)
+                });
+                
+                // Update local data
+                userStats[currentUser].password = hashPassword(newPassword);
+                
+                document.getElementById('changePassword').value = '';
+                alert('Lösenord ändrat!');
+            } catch (error) {
+                console.error("Error changing password:", error);
+                alert('Ett fel uppstod när lösenordet skulle ändras');
+            }
+        });
+    }
+    
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Är du säker på att du vill logga ut?')) {
+                logoutUser();
+            }
+        });
+    }
+}
+
 // Initialize application
 function initializeApp() {
     console.log('Initializing application');
     
     // Load user data first
     loadUserData();
+    
+    // Set up all event listeners
+    setupLoginPageListeners();
+    setupSettingsListeners();
     
     // Set up navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
