@@ -262,7 +262,13 @@
         window.doc = doc;
         window.getDoc = getDoc;
         window.setDoc = setDoc;
+
+        // Vänta tills Firebase är initialiserat innan vi laddar script.js
+        window.addEventListener('load', () => {
+            const script = document.createElement('script');
+            script.src = 'script.js';
+            document.body.appendChild(script);
+        });
     </script>
-    <script src="script.js"></script>
 </body>
 </html> 
