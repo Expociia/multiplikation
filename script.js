@@ -98,24 +98,83 @@ async function updateUserList() {
             const currentTitle = titles.find(t => t.level <= level) || titles[0];
             
             userListHTML += `
-                <div class="user-card">
+                <div class="user-card" data-username="${doc.id}">
                     <img src="avatars/level${Math.min(level, 8)}.png" alt="Avatar" class="user-avatar">
                     <div class="user-info">
                         <span class="user-name">${doc.id}</span>
                         <span class="user-title">${currentTitle.title}</span>
                     </div>
-                    <form class="login-form">
-                        <input type="password" placeholder="Lösenord" class="password-input">
-                        <button type="submit" data-username="${doc.id}">Logga in</button>
-                    </form>
                 </div>
             `;
         });
         
         userList.innerHTML = userListHTML;
+
+        // Lägg till klickhändelser för användarkorten
+        document.querySelectorAll('.user-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const username = card.dataset.username;
+                showLoginForm(username);
+            });
+        });
     } catch (error) {
         console.error("Error updating user list:", error);
     }
+}
+
+// Visa inloggningsformulär för vald användare
+function showLoginForm(username) {
+    const loginContainer = document.getElementById('loginContainer');
+    const loginForm = document.createElement('div');
+    loginForm.className = 'login-form-overlay';
+    loginForm.innerHTML = `
+        <div class="login-form-modal">
+            <h2>Logga in som ${username}</h2>
+            <form id="userLoginForm">
+                <input type="password" id="userPassword" placeholder="Lösenord" required>
+                <div class="button-group">
+                    <button type="submit" class="primary-btn">Logga in</button>
+                    <button type="button" class="secondary-btn" id="cancelLogin">Avbryt</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    loginContainer.appendChild(loginForm);
+    
+    const userLoginForm = document.getElementById('userLoginForm');
+    const cancelButton = document.getElementById('cancelLogin');
+    const passwordInput = document.getElementById('userPassword');
+    
+    // Fokusera på lösenordsfältet
+    passwordInput.focus();
+    
+    userLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const password = passwordInput.value;
+        
+        try {
+            const userRef = doc(db, "users", username);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists() && verifyPassword(password, userDoc.data().password)) {
+                const token = generateToken();
+                // Uppdatera token i databasen
+                await updateDoc(userRef, { token: token });
+                loginForm.remove();
+                await loginUser(username, token);
+            } else {
+                alert('Fel lösenord');
+            }
+        } catch (error) {
+            console.error("Error logging in:", error);
+            alert('Ett fel uppstod vid inloggning');
+        }
+    });
+    
+    cancelButton.addEventListener('click', () => {
+        loginForm.remove();
+    });
 }
 
 // Set up login page event listeners
