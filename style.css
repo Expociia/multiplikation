@@ -880,26 +880,145 @@ input[type="checkbox"] {
 
 /* Snabbaste tabeller */
 .fastest-tables {
-    display: none;
+    display: block;
 }
 
 .slowest-tables {
-    display: none;
+    display: block;
 }
 
-/* Responsiv design */
-@media (max-width: 600px) {
-    .countdown {
-        font-size: 3rem;
-    }
-    
-    .summary-buttons {
-        flex-direction: column;
-    }
-    
-    .summary-buttons button {
-        max-width: 100%;
-    }
+/* Topplistan */
+.leaderboard {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.leaderboard h2 {
+    margin: 0 0 20px 0;
+    color: #333;
+    text-align: center;
+}
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.leaderboard-tab {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background: #f0f0f0;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.leaderboard-tab:hover {
+    background: #e0e0e0;
+}
+
+.leaderboard-tab.active {
+    background: #4CAF50;
+    color: white;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.leaderboard-item:hover {
+    transform: translateX(5px);
+}
+
+.leaderboard-rank {
+    width: 30px;
+    height: 30px;
+    background: #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.leaderboard-item.top-1 .leaderboard-rank {
+    background: #FFD700;
+    color: white;
+}
+
+.leaderboard-item.top-2 .leaderboard-rank {
+    background: #C0C0C0;
+    color: white;
+}
+
+.leaderboard-item.top-3 .leaderboard-rank {
+    background: #CD7F32;
+    color: white;
+}
+
+.leaderboard-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.leaderboard-avatar {
+    width: 40px;
+    height: 40px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.leaderboard-info {
+    flex: 1;
+}
+
+.leaderboard-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.leaderboard-value {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.error {
+    text-align: center;
+    padding: 20px;
+    color: #f44336;
 }
 
 /* Login page */

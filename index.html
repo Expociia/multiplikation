@@ -19,6 +19,7 @@
         <nav class="main-nav">
             <button class="nav-btn active" data-view="game">Spela</button>
             <button class="nav-btn" data-view="stats">Statistik</button>
+            <button class="nav-btn" data-view="leaderboard">Topplistor</button>
             <button class="nav-btn" data-view="settings">Inställningar</button>
         </nav>
 
@@ -125,6 +126,21 @@
             <div class="table-stats">
                 <h3>Detaljerad statistik per tabell</h3>
                 <div id="tableDetails"></div>
+            </div>
+        </div>
+
+        <div id="leaderboardView" class="view">
+            <div class="leaderboard">
+                <h2>Topplistor</h2>
+                <div class="leaderboard-tabs">
+                    <button class="leaderboard-tab active" data-tab="total">Flest lösta</button>
+                    <button class="leaderboard-tab" data-tab="correct">Flest rätt</button>
+                    <button class="leaderboard-tab" data-tab="speed">Snabbaste</button>
+                    <button class="leaderboard-tab" data-tab="streak">Bästa svit</button>
+                </div>
+                <div id="leaderboardList" class="leaderboard-list">
+                    <!-- Topplistan fylls i dynamiskt via JavaScript -->
+                </div>
             </div>
         </div>
 

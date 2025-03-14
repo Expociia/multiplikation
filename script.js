@@ -1255,6 +1255,15 @@ function initializeApp() {
         });
     }
 
+    // Lägg till event listeners för topplistans tabs
+    document.querySelectorAll('.leaderboard-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.leaderboard-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            updateLeaderboard(tab.dataset.tab);
+        });
+    });
+
     // Make selectUser function globally available
     window.selectUser = selectUser;
 
@@ -1280,5 +1289,90 @@ async function selectUser(userName) {
     } catch (error) {
         console.error("Error selecting user:", error);
         alert('Ett fel uppstod när användaren skulle väljas');
+    }
+}
+
+// Lägg till nya funktioner för topplistan
+async function updateLeaderboard(type) {
+    const leaderboardList = document.getElementById('leaderboardList');
+    leaderboardList.innerHTML = '<div class="loading">Laddar topplistan...</div>';
+    
+    try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const users = [];
+        
+        usersSnapshot.forEach(doc => {
+            const userData = doc.data();
+            users.push({
+                username: userData.username,
+                totalSolved: userData.totalSolved || 0,
+                correctAnswers: userData.correctAnswers || 0,
+                averageTime: userData.averageTime || 0,
+                bestStreak: userData.bestStreak || 0
+            });
+        });
+        
+        // Sortera användare baserat på vald typ
+        users.sort((a, b) => {
+            switch(type) {
+                case 'total':
+                    return b.totalSolved - a.totalSolved;
+                case 'correct':
+                    return b.correctAnswers - a.correctAnswers;
+                case 'speed':
+                    return a.averageTime - b.averageTime;
+                case 'streak':
+                    return b.bestStreak - a.bestStreak;
+                default:
+                    return 0;
+            }
+        });
+        
+        // Uppdatera topplistan
+        leaderboardList.innerHTML = users.map((user, index) => `
+            <div class="leaderboard-item ${index < 3 ? 'top-' + (index + 1) : ''}">
+                <div class="leaderboard-rank">${index + 1}</div>
+                <div class="leaderboard-user">
+                    <div class="leaderboard-avatar">${user.username[0].toUpperCase()}</div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${user.username}</div>
+                        <div class="leaderboard-value">
+                            ${getLeaderboardValue(user, type)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error updating leaderboard:', error);
+        leaderboardList.innerHTML = '<div class="error">Ett fel uppstod vid laddning av topplistan</div>';
+    }
+}
+
+function getLeaderboardValue(user, type) {
+    switch(type) {
+        case 'total':
+            return `${user.totalSolved} uppgifter`;
+        case 'correct':
+            return `${user.correctAnswers} rätt`;
+        case 'speed':
+            return `${(user.averageTime / 1000).toFixed(1)} sekunder`;
+        case 'streak':
+            return `${user.bestStreak} i rad`;
+        default:
+            return '';
+    }
+}
+
+// Uppdatera showView-funktionen
+function showView(viewId) {
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+    document.getElementById(viewId + 'View').classList.add('active');
+    
+    // Uppdatera topplistan om vi visar den vyn
+    if (viewId === 'leaderboard') {
+        updateLeaderboard('total');
     }
 } 
