@@ -664,9 +664,6 @@ function updateStats() {
         .sort((a, b) => {
             const ratioA = a[1].correct / a[1].total;
             const ratioB = b[1].correct / b[1].total;
-            if (ratioA === ratioB) {
-                return a[1].averageTime - b[1].averageTime;
-            }
             return ratioA - ratioB;
         })
         .slice(0, 3);
@@ -676,23 +673,20 @@ function updateStats() {
         .sort((a, b) => {
             const ratioA = a[1].correct / a[1].total;
             const ratioB = b[1].correct / b[1].total;
-            if (ratioA === ratioB) {
-                return b[1].averageTime - a[1].averageTime;
-            }
             return ratioB - ratioA;
         })
         .slice(0, 3);
 
-    // Find fastest tables
+    // Find fastest tables - använd faktisk genomsnittlig tid
     const fastestTables = tableStats
-        .filter(([_, stat]) => stat.total >= 5 && stat.averageTime > 0) // Minst 5 uppgifter och har en registrerad tid
-        .sort((a, b) => a[1].averageTime - b[1].averageTime)
+        .filter(([_, stat]) => stat.total >= 5 && stat.totalTime > 0) // Minst 5 uppgifter och har registrerad tid
+        .sort((a, b) => (a[1].totalTime / a[1].total) - (b[1].totalTime / b[1].total))
         .slice(0, 3);
 
-    // Find slowest tables
+    // Find slowest tables - använd faktisk genomsnittlig tid
     const slowestTables = tableStats
-        .filter(([_, stat]) => stat.total >= 5 && stat.averageTime > 0) // Minst 5 uppgifter och har en registrerad tid
-        .sort((a, b) => b[1].averageTime - a[1].averageTime)
+        .filter(([_, stat]) => stat.total >= 5 && stat.totalTime > 0) // Minst 5 uppgifter och har registrerad tid
+        .sort((a, b) => (b[1].totalTime / b[1].total) - (a[1].totalTime / a[1].total))
         .slice(0, 3);
 
     // Update hardest tables list
@@ -710,13 +704,13 @@ function updateStats() {
     // Update fastest tables list
     const fastestList = document.getElementById('fastestTables');
     fastestList.innerHTML = fastestTables.map(([table, stat]) => 
-        `<li>${table}:ans tabell (${(stat.averageTime/1000).toFixed(2)} sekunder)</li>`
+        `<li>${table}:ans tabell (${((stat.totalTime / stat.total)/1000).toFixed(2)} sekunder)</li>`
     ).join('');
 
     // Update slowest tables list
     const slowestList = document.getElementById('slowestTables');
     slowestList.innerHTML = slowestTables.map(([table, stat]) => 
-        `<li>${table}:ans tabell (${(stat.averageTime/1000).toFixed(2)} sekunder)</li>`
+        `<li>${table}:ans tabell (${((stat.totalTime / stat.total)/1000).toFixed(2)} sekunder)</li>`
     ).join('');
 
     // Update detailed statistics
@@ -726,7 +720,7 @@ function updateStats() {
             <h4>${table}:ans tabell</h4>
             <p>Totalt: ${stat.total} | Rätt: ${stat.correct} | Fel: ${stat.incorrect}</p>
             <p>Rättprocent: ${Math.round(stat.correct/stat.total * 100)}%</p>
-            <p>Genomsnittlig tid: ${(stat.averageTime/1000).toFixed(2)} sekunder</p>
+            <p>Genomsnittlig tid: ${((stat.totalTime / stat.total)/1000).toFixed(2)} sekunder</p>
         </div>
     `).join('');
 }
