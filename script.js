@@ -755,14 +755,21 @@ function endGame() {
 // Starta timer
 function startTimer(seconds) {
     let timeLeft = seconds;
-    const timerElement = document.createElement('div');
-    timerElement.id = 'timer';
-    timerElement.className = 'timer';
-    document.querySelector('.game-area').prepend(timerElement);
+    const gameArea = document.querySelector('.game-area');
+    if (!gameArea) return;
+    
+    // Lägg till timer-element
+    gameArea.insertAdjacentHTML('afterbegin', `
+        <div id="timer" class="timer">Tid kvar: ${timeLeft}s</div>
+    `);
+    
+    const timerElement = document.getElementById('timer');
     
     gameTimer = setInterval(() => {
         timeLeft--;
-        timerElement.textContent = `Tid kvar: ${timeLeft}s`;
+        if (timerElement) {
+            timerElement.textContent = `Tid kvar: ${timeLeft}s`;
+        }
         
         if (timeLeft <= 0) {
             endGame();
