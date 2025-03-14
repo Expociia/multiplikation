@@ -899,19 +899,6 @@ function startGamePlay(gameType) {
         startTimer(timeLimit);
     }
     
-    // Select tables based on game type if it's not a custom game
-    if (!Array.isArray(gameType.tables)) {
-        if (gameType.tables === 'all') {
-            selectedTables = Array.from({length: 10}, (_, i) => i + 1);
-        } else if (gameType.tables === 'high') {
-            selectedTables = [6, 7, 8, 9, 10];
-        } else if (gameType.tables === 'low') {
-            selectedTables = [1, 2, 3, 4, 5];
-        } else if (gameType.tables === 'hard') {
-            selectedTables = findHardestTables(3);
-        }
-    }
-    
     // Start game
     generateProblem();
 }
