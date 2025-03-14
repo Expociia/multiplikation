@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- Bakgrund -->
+    <circle cx="100" cy="100" r="90" fill="#90A4AE"/>
+    
+    <!-- Robot-huvud -->
+    <rect x="40" y="40" width="120" height="120" rx="20" fill="#78909C"/>
+    
+    <!-- Ögon -->
+    <circle cx="75" cy="85" r="15" fill="#E3F2FD"/>
+    <circle cx="125" cy="85" r="15" fill="#E3F2FD"/>
+    <circle cx="75" cy="85" r="8" fill="#2196F3"/>
+    <circle cx="125" cy="85" r="8" fill="#2196F3"/>
+    
+    <!-- Antenner -->
+    <path d="M 85 40 L 85 30" stroke="#78909C" stroke-width="5"/>
+    <path d="M 115 40 L 115 30" stroke="#78909C" stroke-width="5"/>
+    <circle cx="85" cy="25" r="5" fill="#FFD700"/>
+    <circle cx="115" cy="25" r="5" fill="#FFD700"/>
+    
+    <!-- Mun -->
+    <path d="M 75 120 L 125 120" stroke="#E3F2FD" stroke-width="5"/>
+    
+    <!-- Mekaniska detaljer -->
+    <path d="M 60 60 L 140 60" stroke="#E3F2FD" stroke-width="2"/>
+    <path d="M 60 70 L 140 70" stroke="#E3F2FD" stroke-width="2"/>
+    
+    <!-- Nivå 7-märke -->
+    <circle cx="100" cy="100" r="30" fill="#4CAF50"/>
+    <text x="100" y="110" font-size="24" fill="white" text-anchor="middle">7</text>
+    
+    <!-- Stjärnor -->
+    <circle cx="40" cy="40" r="5" fill="#FFD700"/>
+    <circle cx="160" cy="40" r="5" fill="#FFD700"/>
+    <circle cx="100" cy="20" r="5" fill="#FFD700"/>
+</svg> 

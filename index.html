@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplikationsträning</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Multiplikationsträning</h1>
+            <div class="user-info">
+                <span id="currentUser">Ingen användare</span>
+                <button id="changeUser">Byt användare</button>
+            </div>
+        </header>
+
+        <nav class="main-nav">
+            <button class="nav-btn active" data-view="game">Spela</button>
+            <button class="nav-btn" data-view="stats">Statistik</button>
+            <button class="nav-btn" data-view="settings">Inställningar</button>
+        </nav>
+
+        <div id="gameView" class="view active">
+            <div class="score">Poäng: <span id="score">0</span></div>
+            <main class="game-area">
+                <div class="game-type-selector">
+                    <h3>Välj speltyp</h3>
+                    <div class="game-types">
+                        <button class="game-type-btn" data-type="Alla tabeller">
+                            <h4>Alla tabeller</h4>
+                            <p>20 tal från alla tabeller</p>
+                        </button>
+                        <button class="game-type-btn" data-type="Höga tabeller">
+                            <h4>Höga tabeller</h4>
+                            <p>10 tal från 6-10:ans tabeller</p>
+                        </button>
+                        <button class="game-type-btn" data-type="Låga tabeller">
+                            <h4>Låga tabeller</h4>
+                            <p>25 tal från 1-5:ans tabeller</p>
+                        </button>
+                        <button class="game-type-btn" data-type="Tidsutmaning">
+                            <h4>Tidsutmaning</h4>
+                            <p>Så många tal som möjligt på 1 minut</p>
+                        </button>
+                        <button class="game-type-btn" data-type="Svåra tabeller">
+                            <h4>Svåra tabeller</h4>
+                            <p>15 tal från dina svåraste tabeller</p>
+                        </button>
+                    </div>
+                    <div class="custom-game">
+                        <h4>Anpassat spel</h4>
+                        <div class="custom-game-options">
+                            <label>
+                                Antal tal:
+                                <input type="number" id="customProblems" min="1" value="10">
+                            </label>
+                            <div class="table-selection">
+                                <h5>Välj tabeller:</h5>
+                                <label><input type="checkbox" value="1" checked> 1:ans tabell</label>
+                                <label><input type="checkbox" value="2" checked> 2:ans tabell</label>
+                                <label><input type="checkbox" value="3" checked> 3:ans tabell</label>
+                                <label><input type="checkbox" value="4" checked> 4:ans tabell</label>
+                                <label><input type="checkbox" value="5" checked> 5:ans tabell</label>
+                                <label><input type="checkbox" value="6" checked> 6:ans tabell</label>
+                                <label><input type="checkbox" value="7" checked> 7:ans tabell</label>
+                                <label><input type="checkbox" value="8" checked> 8:ans tabell</label>
+                                <label><input type="checkbox" value="9" checked> 9:ans tabell</label>
+                                <label><input type="checkbox" value="10" checked> 10:ans tabell</label>
+                            </div>
+                            <button id="startCustomGame">Starta anpassat spel</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div id="statsView" class="view">
+            <h2>Din Statistik</h2>
+            <div class="user-profile">
+                <div class="profile-header">
+                    <div class="avatar-container">
+                        <img id="userAvatar" src="avatars/level1.png" alt="Användaravatar">
+                    </div>
+                    <div class="profile-info">
+                        <h3><span id="userTitle">Nykomling</span> <span id="statsUserName">Ingen användare</span></h3>
+                        <div class="level-info">
+                            Nivå <span id="userLevel">1</span>
+                            <div class="progress-bar">
+                                <div id="levelProgress" class="progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="achievements">
+                    <h3>Utmärkelser</h3>
+                    <div id="achievementsList" class="achievements-grid"></div>
+                </div>
+            </div>
+            <div class="stats-overview">
+                <div class="stats-card">
+                    <h3>Översikt</h3>
+                    <p>Totalt antal övningar: <span id="totalExercises">0</span></p>
+                    <p>Rätt svar: <span id="totalCorrect">0</span></p>
+                    <p>Fel svar: <span id="totalIncorrect">0</span></p>
+                </div>
+                <div class="stats-card">
+                    <h3>Svåraste tabeller</h3>
+                    <ul id="hardestTables"></ul>
+                </div>
+                <div class="stats-card">
+                    <h3>Bästa tabeller</h3>
+                    <ul id="bestTables"></ul>
+                </div>
+                <div class="stats-card">
+                    <h3>Snabbaste tabellerna</h3>
+                    <ul id="fastestTables"></ul>
+                </div>
+                <div class="stats-card">
+                    <h3>Långsammaste tabellerna</h3>
+                    <ul id="slowestTables"></ul>
+                </div>
+            </div>
+            <div class="table-stats">
+                <h3>Detaljerad statistik per tabell</h3>
+                <div id="tableDetails"></div>
+            </div>
+        </div>
+
+        <div id="settingsView" class="view">
+            <h2>Inställningar</h2>
+            <div class="training-mode">
+                <h3>Träningsläge</h3>
+                <select id="trainingMode">
+                    <option value="free">Fritt läge</option>
+                    <option value="hard">Träna svåra</option>
+                    <option value="mixed">Mixat läge</option>
+                </select>
+            </div>
+            <div class="table-selection">
+                <h3>Välj tabeller att träna</h3>
+                <label>
+                    <input type="checkbox" value="1" checked> 1:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="2" checked> 2:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="3" checked> 3:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="4" checked> 4:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="5" checked> 5:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="6" checked> 6:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="7" checked> 7:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="8" checked> 8:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="9" checked> 9:ans tabell
+                </label>
+                <label>
+                    <input type="checkbox" value="10" checked> 10:ans tabell
+                </label>
+            </div>
+            <div class="reset-section">
+                <h3>Återställ statistik</h3>
+                <p>Här kan du återställa din statistik om du vill börja om från början.</p>
+                <button id="resetStats" class="reset-btn">Återställ min statistik</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Användarregistreringsmodal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <h2>Välj användare</h2>
+            <div class="user-form">
+                <input type="text" id="userName" placeholder="Skriv ditt namn">
+                <button id="saveUser">Spara</button>
+            </div>
+            <div class="user-list">
+                <h3>Tidigare användare</h3>
+                <ul id="previousUsers"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spelmodal -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content game-modal">
+            <div id="countdown" class="countdown"></div>
+            <div class="game-play-area" style="display: none;">
+                <div class="problem">
+                    <span id="number1">5</span> × <span id="number2">7</span> = ?
+                </div>
+
+                <div class="answer-input">
+                    <input type="number" id="answer" placeholder="Skriv ditt svar här" autofocus>
+                    <button id="check">Svara</button>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+                <button id="hint" class="hint-btn" style="display: none;">Visa ledtråd</button>
+
+                <div class="stats">
+                    <div>Rätt: <span id="correct">0</span></div>
+                    <div>Fel: <span id="incorrect">0</span></div>
+                </div>
+            </div>
+            <div id="gameSummary" class="game-summary" style="display: none;">
+                <h2>Spel avslutat!</h2>
+                <div class="summary-stats">
+                    <p>Rätt svar: <span id="summaryCorrect">0</span></p>
+                    <p>Fel svar: <span id="summaryIncorrect">0</span></p>
+                    <p>Genomsnittlig tid: <span id="summaryAvgTime">0</span> sekunder</p>
+                    <p>Bästa svit: <span id="summaryBestStreak">0</span></p>
+                </div>
+                <div class="summary-buttons">
+                    <button id="playAgain">Spela igen</button>
+                    <button id="closeSummary">Stäng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
