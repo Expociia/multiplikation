@@ -1078,32 +1078,10 @@ function initializeApp() {
 
     // User management
     const changeUserBtn = document.getElementById('changeUser');
-    const saveUserBtn = document.getElementById('saveUser');
-    const userNameInput = document.getElementById('userName');
-    
     if (changeUserBtn) {
         changeUserBtn.addEventListener('click', () => {
             console.log('Change user button clicked');
             logoutUser();
-        });
-    }
-    
-    if (saveUserBtn && userNameInput) {
-        saveUserBtn.addEventListener('click', () => {
-            const userName = userNameInput.value.trim();
-            console.log('Save user button clicked, username:', userName);
-            if (userName) {
-                selectUser(userName);
-            }
-        });
-        
-        userNameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const userName = userNameInput.value.trim();
-                if (userName) {
-                    selectUser(userName);
-                }
-            }
         });
     }
 
@@ -1222,4 +1200,26 @@ function initializeApp() {
     window.selectUser = selectUser;
 
     console.log('Application initialized');
+}
+
+// Funktion för att välja användare
+async function selectUser(userName) {
+    try {
+        const userRef = doc(db, "users", userName);
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
+            alert('Användaren finns inte');
+            return;
+        }
+        
+        const token = generateToken();
+        // Update token in database
+        await updateDoc(userRef, { token: token });
+        await loginUser(userName, token);
+        
+    } catch (error) {
+        console.error("Error selecting user:", error);
+        alert('Ett fel uppstod när användaren skulle väljas');
+    }
 } 
