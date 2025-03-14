@@ -384,7 +384,7 @@ function checkAnswer() {
     if (userAnswer === correctAnswer) {
         score += 1;
         correct += 1;
-        feedbackElement.textContent = 'Rätt! Bra jobbat!';
+        feedbackElement.textContent = 'Helt rätt! Fortsätt så!';
         feedbackElement.style.color = 'green';
         updateTableStats(true, timeSpent);
         
