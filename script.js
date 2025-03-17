@@ -989,6 +989,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Firebase is ready');
             clearInterval(checkFirebase);
             initializeApp();
+            
+            // Trigga initial visning av aktiv vy
+            const activeView = document.querySelector('.nav-btn.active');
+            if (activeView) {
+                showView(activeView.dataset.view);
+            }
         } else {
             console.log('Waiting for Firebase...');
         }
@@ -1376,6 +1382,16 @@ function showView(viewId) {
     
     // Uppdatera topplistan om vi visar den vyn
     if (viewId === 'leaderboard') {
-        updateLeaderboard('total');
+        // Hitta den aktiva tabb-knappen och använd dess data-tab värde
+        const activeTab = document.querySelector('.leaderboard-tab.active');
+        if (activeTab) {
+            updateLeaderboard(activeTab.dataset.tab);
+        }
+    } else if (viewId === 'game') {
+        // Visa spelväljaren när vi går till spelvyn
+        const gameTypeSelector = document.querySelector('.game-type-selector');
+        if (gameTypeSelector) {
+            gameTypeSelector.style.display = 'block';
+        }
     }
 } 
