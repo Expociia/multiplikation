@@ -232,17 +232,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAJN0yNMMR0lgXzP8APEDiZRoNd3gkMtKc",
-            authDomain: "multiplikationstraning.firebaseapp.com",
-            projectId: "multiplikationstraning",
-            storageBucket: "multiplikationstraning.appspot.com",
-            messagingSenderId: "428828316384",
-            appId: "1:428828316384:web:3a7552b2f4c255be01b685",
-            measurementId: "G-RQBQ8R59HM"
-        };
+        import firebaseConfig from './config.js';
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
