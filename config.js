@@ -1,6 +1,6 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: process.env.FIREBASE_API_KEY || "din_api_nyckel_här",
+    apiKey: "AIzaSyA4mI7-tfblR864G_XKV9RO86gq3MkBxRw", // Ersätt med din nya API-nyckel
     authDomain: "multiplikationstraning.firebaseapp.com",
     projectId: "multiplikationstraning",
     storageBucket: "multiplikationstraning.appspot.com",
