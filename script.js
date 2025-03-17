@@ -1124,17 +1124,11 @@ function initializeApp() {
         });
     });
 
-    // Trigga initial visning av aktiv vy
-    const activeView = document.querySelector('.nav-btn.active');
-    if (activeView) {
-        showView(activeView.dataset.view);
-    } else {
-        // Om ingen vy är aktiv, sätt game som standard
-        const gameBtn = document.querySelector('.nav-btn[data-view="game"]');
-        if (gameBtn) {
-            gameBtn.classList.add('active');
-            showView('game');
-        }
+    // Aktivera game-vyn som standard och visa spelväljaren
+    const gameBtn = document.querySelector('.nav-btn[data-view="game"]');
+    if (gameBtn) {
+        gameBtn.classList.add('active');
+        showView('game');
     }
 
     // User management
@@ -1413,15 +1407,20 @@ function showView(viewId) {
             updateLeaderboard(activeTab.dataset.tab);
         }
     } else if (viewId === 'game') {
-        // Visa spelväljaren när vi går till spelvyn
+        // Visa alltid spelväljaren först när vi går till spelvyn
         const gameTypeSelector = document.querySelector('.game-type-selector');
+        const gamePlayArea = document.querySelector('.game-play-area');
+        
         if (gameTypeSelector) {
             gameTypeSelector.style.display = 'block';
         }
-        // Dölj spelområdet bara om vi inte är i ett aktivt spel
-        const gamePlayArea = document.querySelector('.game-play-area');
-        if (gamePlayArea && gameMode !== 'challenge') {
+        if (gamePlayArea) {
             gamePlayArea.style.display = 'none';
         }
+        
+        // Återställ spelläget
+        gameMode = 'practice';
+        remainingProblems = null;
+        timeLimit = null;
     }
 } 
