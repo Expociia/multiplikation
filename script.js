@@ -1104,25 +1104,24 @@ function initializeApp() {
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             console.log('Navigation button clicked:', btn.dataset.view);
-            // Hide game play area when switching views
-            const gamePlayArea = document.querySelector('.game-play-area');
-            if (gamePlayArea) {
-                gamePlayArea.style.display = 'none';
-            }
-            
-            // Show game type selector when returning to game view
-            const gameTypeSelector = document.querySelector('.game-type-selector');
-            if (gameTypeSelector && btn.dataset.view === 'game') {
-                gameTypeSelector.style.display = 'block';
-            }
-            
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            
             btn.classList.add('active');
-            document.getElementById(`${btn.dataset.view}View`).classList.add('active');
+            showView(btn.dataset.view);
         });
     });
+
+    // Trigga initial visning av aktiv vy
+    const activeView = document.querySelector('.nav-btn.active');
+    if (activeView) {
+        showView(activeView.dataset.view);
+    } else {
+        // Om ingen vy är aktiv, sätt game som standard
+        const gameBtn = document.querySelector('.nav-btn[data-view="game"]');
+        if (gameBtn) {
+            gameBtn.classList.add('active');
+            showView('game');
+        }
+    }
 
     // User management
     const changeUserBtn = document.getElementById('changeUser');
@@ -1375,10 +1374,16 @@ function getLeaderboardValue(user, type) {
 
 // Uppdatera showView-funktionen
 function showView(viewId) {
+    // Dölj alla vyer
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
     });
-    document.getElementById(viewId + 'View').classList.add('active');
+    
+    // Visa vald vy
+    const selectedView = document.getElementById(viewId + 'View');
+    if (selectedView) {
+        selectedView.classList.add('active');
+    }
     
     // Uppdatera topplistan om vi visar den vyn
     if (viewId === 'leaderboard') {
@@ -1392,6 +1397,11 @@ function showView(viewId) {
         const gameTypeSelector = document.querySelector('.game-type-selector');
         if (gameTypeSelector) {
             gameTypeSelector.style.display = 'block';
+        }
+        // Dölj spelområdet
+        const gamePlayArea = document.querySelector('.game-play-area');
+        if (gamePlayArea) {
+            gamePlayArea.style.display = 'none';
         }
     }
 } 
