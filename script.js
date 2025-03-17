@@ -1401,9 +1401,15 @@ function showView(viewId) {
     
     // Uppdatera topplistan om vi visar den vyn
     if (viewId === 'leaderboard') {
-        // Hitta den aktiva tabb-knappen och använd dess data-tab värde
+        // Om ingen tabb är aktiv, aktivera den första
         const activeTab = document.querySelector('.leaderboard-tab.active');
-        if (activeTab) {
+        if (!activeTab) {
+            const firstTab = document.querySelector('.leaderboard-tab');
+            if (firstTab) {
+                firstTab.classList.add('active');
+                updateLeaderboard(firstTab.dataset.tab);
+            }
+        } else {
             updateLeaderboard(activeTab.dataset.tab);
         }
     } else if (viewId === 'game') {
@@ -1412,9 +1418,9 @@ function showView(viewId) {
         if (gameTypeSelector) {
             gameTypeSelector.style.display = 'block';
         }
-        // Dölj spelområdet
+        // Dölj spelområdet bara om vi inte är i ett aktivt spel
         const gamePlayArea = document.querySelector('.game-play-area');
-        if (gamePlayArea) {
+        if (gamePlayArea && gameMode !== 'challenge') {
             gamePlayArea.style.display = 'none';
         }
     }
