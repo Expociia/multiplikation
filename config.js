@@ -1,6 +1,6 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyA4mI7-tfblR864G_XKV9RO86gq3MkBxRw", // Ersätt med din nya API-nyckel
+    apiKey: "AIzaSyA4mI7-tfblR864G_XKV9RO86gq3MkBxRw",
     authDomain: "multiplikationstraning.firebaseapp.com",
     projectId: "multiplikationstraning",
     storageBucket: "multiplikationstraning.appspot.com",
