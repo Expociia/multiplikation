@@ -23,7 +23,14 @@ async function loadUserData() {
                 currentUser = userName;
                 userStats[currentUser] = userDoc.data();
                 updateUserInterface();
-                generateProblem();
+                
+                // Aktivera spel-vyn och visa spelväljaren
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                const gameBtn = document.querySelector('.nav-btn[data-view="game"]');
+                if (gameBtn) {
+                    gameBtn.classList.add('active');
+                    showView('game');
+                }
             } else {
                 localStorage.removeItem('userToken');
                 showLoginPage();
@@ -270,7 +277,14 @@ async function loginUser(userName, token) {
     
     // Update interface
     updateUserInterface();
-    generateProblem();
+    
+    // Aktivera spel-vyn och visa spelväljaren
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    const gameBtn = document.querySelector('.nav-btn[data-view="game"]');
+    if (gameBtn) {
+        gameBtn.classList.add('active');
+        showView('game');
+    }
 }
 
 // Update user interface after login
