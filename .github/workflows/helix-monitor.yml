@@ -1,7 +1,6 @@
 name: Helix API test
 
-on:
-  workflow_dispatch:
+on: [workflow_dispatch]
 
 jobs:
   test:
@@ -11,6 +10,7 @@ jobs:
       - name: Query Liseberg virtual queues
         run: |
           echo "Fetching Liseberg queues..."
+
           curl -sS \
             -H "Accept: application/json" \
             https://virtualqueue.liseberg.se/Queue \
@@ -18,7 +18,7 @@ jobs:
 
           echo ""
           echo "=== Searching for HELIX ==="
-          cat queues.json | grep -i -C 5 "helix" || true
+          grep -i -C 10 "helix" queues.json || true
 
           echo ""
           echo "=== Full response ==="
