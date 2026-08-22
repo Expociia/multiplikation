@@ -39,7 +39,7 @@ jobs:
                   .[]
                   | select(.key=="HELI")
                   | .estimatedTimes[]?
-                  | select(.partySize==6)
+                  | select(.partySize>=4)
                   | .time
                 ' \
                 | head -n 1)
