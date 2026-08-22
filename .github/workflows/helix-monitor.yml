@@ -1,25 +1,81 @@
-name: Helix API test
+name: Helix monitor
 
 on: [workflow_dispatch]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
-  test:
+  monitor:
     runs-on: ubuntu-latest
+    timeout-minutes: 270
 
     steps:
-      - name: Query Liseberg virtual queues
+      - name: Monitor Helix for 6 people
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          echo "Fetching Liseberg queues..."
+          echo "Starting Helix monitor for 6 people..."
+          echo "Checking every 15 seconds."
 
-          curl -sS \
-            -H "Accept: application/json" \
-            https://virtualqueue.liseberg.se/Queue \
-            | tee queues.json
+          END_TIME=$(( $(date +%s) + 16200 ))
 
-          echo ""
-          echo "=== Searching for HELIX ==="
-          grep -i -C 10 "helix" queues.json || true
+          while [ "$(date +%s)" -lt "$END_TIME" ]; do
 
-          echo ""
-          echo "=== Full response ==="
-          cat queues.json
+            RESPONSE=$(curl -fsS \
+              --max-time 10 \
+              -H "Accept: application/json" \
+              https://virtualqueue.liseberg.se/Queue || true)
+
+            if [ -n "$RESPONSE" ]; then
+
+              STATUS=$(printf '%s' "$RESPONSE" \
+                | jq -r '.[] | select(.key=="HELI") | .status')
+
+              SLOT=$(printf '%s' "$RESPONSE" \
+                | jq -r '
+                  .[]
+                  | select(.key=="HELI")
+                  | .estimatedTimes[]?
+                  | select(.partySize==6)
+                  | .time
+                ' \
+                | head -n 1)
+
+              NOW=$(TZ=Europe/Stockholm date '+%H:%M:%S')
+
+              if [ -n "$SLOT" ] && [ "$SLOT" != "null" ]; then
+
+                LOCAL_TIME=$(TZ=Europe/Stockholm \
+                  date -d "$SLOT" '+%H:%M' 2>/dev/null || echo "$SLOT")
+
+                echo "FOUND SLOT FOR 6: $LOCAL_TIME"
+
+                gh issue create \
+                  --repo "$REPO" \
+                  --title "HELIX LEDIGT FOR 6 - $LOCAL_TIME" \
+                  --body "Helix har precis fått en bokningsbar virtuell kötid för 6 personer.
+
+                Tid: $LOCAL_TIME
+
+                ÖPPNA LISEBERGSAPPEN OCH BOKA DIREKT.
+
+                Kontroll gjord: $NOW"
+
+                exit 0
+
+              else
+                echo "[$NOW] Helix status: $STATUS - ingen tid för 6"
+              fi
+
+            else
+              echo "Liseberg API svarade inte. Försöker igen."
+            fi
+
+            sleep 15
+
+          done
+
+          echo "Monitor stopped after 4.5 hours."
